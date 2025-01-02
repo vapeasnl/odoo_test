@@ -1,0 +1,78 @@
+Le **Chapitre 3** de votre tutoriel sur le développement de modules Odoo se concentre sur la création de modèles et de champs pour un module immobilier. Après avoir posé les bases avec un module vide, l'objectif ici est d'ajouter des champs et des modèles pour stocker des informations dans la base de données. Le modèle immobilier que vous allez créer permet de gérer les propriétés et leurs caractéristiques comme le nom, la description, le prix, etc.
+
+### Objectifs clés :
+1. **Modèle immobilier :**
+   - Vous devez définir un modèle Python pour représenter une propriété immobilière dans Odoo.
+   - Un modèle dans Odoo est une classe qui étend la classe `models.Model`, avec un nom unique via l'attribut `_name`.
+
+2. **Définition des champs :**
+   - Les champs sont utilisés pour stocker les données dans la base de données. Ils sont définis comme des attributs dans la classe du modèle.
+   - Exemple de champs à définir :
+     - `name` (nom du bien, type `Char`).
+     - `description` (description du bien, type `Text`).
+     - `postcode` (code postal, type `Char`).
+     - `date_availability` (date de disponibilité, type `Date`).
+     - `expected_price` (prix attendu, type `Float`).
+     - `selling_price` (prix de vente, type `Float`).
+     - `bedrooms` (nombre de chambres, type `Integer`).
+     - Et d'autres attributs comme `garage`, `garden`, `garden_area`, etc.
+
+3. **Champs automatiques :**
+   - Odoo crée automatiquement des champs comme `id`, `create_date`, `create_uid`, `write_date`, `write_uid`, etc. Ces champs sont gérés par le système et vous n'avez pas besoin de les définir.
+
+4. **Règles de validation et attributs de champ :**
+   - Vous pouvez définir des règles de validation pour vous assurer que certains champs sont remplis, comme avec `required=True`.
+   - Par exemple, le champ `name` et `expected_price` doivent être requis.
+
+### Exercices pratiques :
+1. **Définir le modèle des propriétés immobilières :**
+   - Créez les fichiers nécessaires et ajoutez un modèle `estate.property` dans le répertoire `models`.
+
+2. **Ajouter les champs de base :**
+   - Ajoutez les champs définis pour les propriétés immobilières dans le modèle.
+
+3. **Redémarrer le serveur Odoo :**
+   - Après avoir modifié les fichiers, redémarrez le serveur Odoo en utilisant la commande `-u estate` pour appliquer les changements.
+
+4. **Ajouter des attributs de validation :**
+   - Définissez les attributs comme `required=True` pour certains champs afin de les rendre obligatoires.
+
+### Exemple de code pour définir le modèle de propriété :
+```python
+from odoo import models, fields
+
+class EstateProperty(models.Model):
+    _name = "estate.property"
+    _description = "Property for Sale"
+
+    name = fields.Char(string="Property Name", required=True)
+    description = fields.Text(string="Description")
+    postcode = fields.Char(string="Postal Code")
+    date_availability = fields.Date(string="Availability Date")
+    expected_price = fields.Float(string="Expected Price", required=True)
+    selling_price = fields.Float(string="Selling Price")
+    bedrooms = fields.Integer(string="Number of Bedrooms")
+    living_area = fields.Integer(string="Living Area (sqm)")
+    facades = fields.Integer(string="Number of Facades")
+    garage = fields.Boolean(string="Has Garage")
+    garden = fields.Boolean(string="Has Garden")
+    garden_area = fields.Integer(string="Garden Area (sqm)")
+    garden_orientation = fields.Selection([
+        ('north', 'North'),
+        ('south', 'South'),
+        ('east', 'East'),
+        ('west', 'West')
+    ], string="Garden Orientation")
+```
+
+### Points à vérifier après l'ajout des champs :
+- Vérifiez la structure de la table dans la base de données via `psql -d rd-demo` avec la commande `\d estate_property` pour vous assurer que tous les champs sont correctement créés.
+- Utilisez la commande `./odoo-bin --addons-path=addons,../tutorials/ -d rd-demo -u estate` pour redémarrer et mettre à jour le module dans Odoo.
+
+### Résumé :
+- Vous avez défini un modèle pour gérer les propriétés immobilières dans votre module.
+- Vous avez ajouté des champs pour stocker des informations essentielles comme le nom, le prix, la description, etc.
+- Vous avez appliqué des attributs de validation pour rendre certains champs obligatoires.
+- Vous avez redémarré le serveur pour appliquer les modifications à la base de données. 
+
+Les prochaines étapes incluront probablement la création de vues pour permettre aux utilisateurs de saisir et de gérer ces informations via l'interface utilisateur d'Odoo.

@@ -1,0 +1,138 @@
+Dans Odoo, lors de la définition d'un champ (`<field>`) dans une vue XML, il existe plusieurs options (attributs) que l'on peut ajouter pour personnaliser le comportement et l'affichage de ce champ. Voici les options les plus courantes :
+
+### 1. **`name`**
+   - **Description** : Spécifie le nom du champ dans le modèle (ce nom doit correspondre à un champ défini dans le modèle).
+   - **Exemple** :
+     ```xml
+     <field name="name"/>
+     ```
+
+### 2. **`string`**
+   - **Description** : Le libellé ou le texte affiché pour ce champ dans l'interface utilisateur.
+   - **Exemple** :
+     ```xml
+     <field name="name" string="User Name"/>
+     ```
+
+### 3. **`widget`**
+   - **Description** : Utilisé pour spécifier un widget personnalisé pour le champ (par exemple, un sélecteur de date, une barre de progression, etc.).
+   - **Exemple** :
+     ```xml
+     <field name="date_of_birth" widget="date"/>
+     ```
+
+### 4. **`readonly`**
+   - **Description** : Permet de rendre un champ en lecture seule (les utilisateurs ne peuvent pas le modifier).
+   - **Exemple** :
+     ```xml
+     <field name="name" readonly="1"/>
+     ```
+
+### 5. **`required`**
+   - **Description** : Rend le champ obligatoire. L'utilisateur doit le remplir avant de pouvoir enregistrer l'enregistrement.
+   - **Exemple** :
+     ```xml
+     <field name="email" required="1"/>
+     ```
+
+### 6. **`invisible`**
+   - **Description** : Rend le champ invisible dans l'interface utilisateur.
+   - **Exemple** :
+     ```xml
+     <field name="some_field" invisible="1"/>
+     ```
+
+### 7. **`nolabel`**
+   - **Description** : Permet de masquer le label du champ dans la vue, mais affiche toujours le champ lui-même.
+   - **Exemple** :
+     ```xml
+     <field name="property_ids" nolabel="1"/>
+     ```
+
+### 8. **`placeholder`**
+   - **Description** : Texte de remplacement (placeholder) à afficher dans le champ (utilisé principalement pour les champs de type `char` ou `text`).
+   - **Exemple** :
+     ```xml
+     <field name="email" placeholder="Enter your email address"/>
+     ```
+
+### 9. **`domain`**
+   - **Description** : Utilisé pour restreindre les valeurs possibles dans un champ de type relationnel (par exemple, `Many2one`, `Many2many`). C'est une liste de conditions qui définissent les enregistrements à afficher dans le champ.
+   - **Exemple** :
+     ```xml
+     <field name="partner_id" domain="[('is_customer', '=', True)]"/>
+     ```
+
+### 10. **`context`**
+   - **Description** : Permet de spécifier un contexte spécifique pour le champ, comme des valeurs par défaut ou des actions conditionnelles.
+   - **Exemple** :
+     ```xml
+     <field name="user_id" context="{'default_group_id': group_id}"/>
+     ```
+
+### 11. **`options`**
+   - **Description** : Permet de spécifier des options supplémentaires pour certains types de champs, comme les champs `many2many_tags` ou `many2one`.
+   - **Exemple** :
+     ```xml
+     <field name="category_id" options="{'no_create': True}"/>
+     ```
+
+### 12. **`help`**
+   - **Description** : Affiche un texte d'aide à côté du champ, qui peut fournir des informations supplémentaires à l'utilisateur.
+   - **Exemple** :
+     ```xml
+     <field name="description" help="Provide a detailed description of the product"/>
+     ```
+
+### 13. **`attrs`**
+   - **Description** : Permet d'ajouter des attributs dynamiques pour rendre un champ visible, requis, ou en lecture seule en fonction de la valeur d'un autre champ. Cela permet de modifier le comportement du champ en fonction des conditions.
+   - **Exemple** :
+     ```xml
+     <field name="discount" attrs="{'invisible': [('state', '=', 'done')]}"/>
+     ```
+
+### 14. **`on_change`**
+   - **Description** : Appelée lors d'un changement de valeur d'un champ, et permet de déclencher des actions en fonction de ce changement (cela s'utilise avec des méthodes Python décorées avec `@api.onchange`).
+   - **Exemple** :
+     ```xml
+     <field name="quantity" on_change="compute_total_price(quantity, price)"/>
+     ```
+
+### 15. **`readonly="1"` conditionnel**
+   - **Description** : Peut être utilisé avec une condition dynamique, en fonction de la valeur d'un autre champ, pour rendre un champ en lecture seule sous certaines conditions.
+   - **Exemple** :
+     ```xml
+     <field name="price" readonly="1" attrs="{'readonly': [('state', '=', 'sold')]}"/>
+     ```
+
+### 16. **`store`**
+   - **Description** : Spécifie si le champ doit être stocké dans la base de données ou non. Par défaut, les champs calculés ne sont pas stockés, mais en ajoutant `store="True"`, le champ sera stocké.
+   - **Exemple** :
+     ```xml
+     <field name="total_amount" store="True"/>
+     ```
+
+### 17. **`colspan`**
+   - **Description** : Définit la largeur du champ dans un groupe, par exemple, si le champ doit occuper plus d'une colonne dans une vue en grille.
+   - **Exemple** :
+     ```xml
+     <field name="description" colspan="2"/>
+     ```
+
+### 18. **`groups`**
+   - **Description** : Utilisé pour spécifier les groupes d'utilisateurs qui peuvent accéder ou modifier ce champ.
+   - **Exemple** :
+     ```xml
+     <field name="price" groups="sale.group_sale_manager"/>
+     ```
+
+### 19. **`store=True` (pour les champs calculés)**
+   - **Description** : Si le champ est calculé, il peut être stocké dans la base de données pour améliorer les performances.
+   - **Exemple** :
+     ```xml
+     <field name="computed_field" store="True"/>
+     ```
+
+### Conclusion
+
+Ces options permettent de personnaliser l'apparence, la fonctionnalité et l'interaction des champs dans les vues d'Odoo. Elles sont très puissantes et vous permettent de créer des interfaces utilisateur intuitives et adaptées à vos besoins spécifiques.

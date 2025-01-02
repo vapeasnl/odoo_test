@@ -1,0 +1,164 @@
+Le chapitre 13 traite de l'intégration entre différents modules d'Odoo, en particulier pour connecter un module immobilier à un module de facturation. L'objectif est de générer une facture dès qu'une propriété est marquée comme « Vendue ». Voici un résumé détaillé de ce que vous devez faire et des concepts clés :
+
+### 1. **Créer un Module de Lien (Estate Account)**
+
+Odoo permet d'étendre les fonctionnalités d'un module en utilisant un **module de liaison**. Un module de liaison sert de lien entre plusieurs modules afin de rendre des fonctionnalités spécifiques accessibles uniquement lorsqu'un module dépendant est installé. Dans votre cas, vous allez créer un module `estate_account` qui dépend des modules `estate` (pour la gestion des propriétés) et `account` (pour la comptabilité et la facturation).
+
+- **But** : Lorsque le module `estate_account` est installé, il doit permettre de générer des factures à partir des propriétés vendues, mais seulement si le module `account` est également installé. Si le module `account` est désinstallé, le module `estate_account` devrait aussi disparaître, car il dépend de la facturation.
+
+- **Création** : Vous devez créer un module qui utilise l'attribut `_inherit` pour étendre les fonctionnalités du module `estate` et ajouter de la logique pour générer des factures.
+
+### 2. **Remplacer la Méthode d'Action « Vendu »**
+
+L'un des objectifs principaux est d'ajouter la fonctionnalité de création de facture à l'action qui est exécutée lorsque vous marquez une propriété comme « Vendue ». Odoo permet de personnaliser les actions en **héritant des modèles existants** et en redéfinissant des méthodes. Dans ce cas, vous allez étendre le modèle `estate.property` pour modifier l'action associée au bouton "Vendu".
+
+- **Méthode à remplacer** : L'action qui marque une propriété comme « Vendue ». Vous devrez remplacer cette méthode pour y ajouter la logique de création de facture.
+  
+- **Code exemple** :
+  ```python
+  from odoo import models
+
+  class EstateProperty(models.Model):
+      _inherit = "estate.property"
+
+      def action_sold(self):
+          # Appel de la méthode d'origine
+          res = super(EstateProperty, self).action_sold()
+          # Ajout de la logique pour créer une facture
+          return res
+  ```
+
+Dans ce code, vous remplacez la méthode `action_sold` pour que l'action de vendre une propriété inclut la création d'une facture.
+
+### 3. **Créer une Facture**
+
+Une fois que la propriété est marquée comme « Vendue », l'étape suivante est de créer une facture pour l'acheteur. Pour créer une facture, vous devez connaître les informations suivantes :
+
+- **`partner_id`** : L'acheteur de la propriété (le client).
+- **`move_type`** : Le type de facture, qui sera probablement "facture client".
+- **`journal_id`** : Le journal comptable dans lequel la facture sera enregistrée.
+
+- **Code pour créer la facture** :
+  ```python
+  def create_invoice(self):
+      partner_id = self.partner_id  # L'acheteur de la propriété
+      journal_id = self.env['account.journal'].search([('type', '=', 'sale')], limit=1)  # Journal de vente
+      move_type = 'out_invoice'  # Facture client
+
+      # Création de la facture
+      invoice = self.env['account.move'].create({
+          'partner_id': partner_id.id,
+          'move_type': move_type,
+          'journal_id': journal_id.id,
+      })
+      return invoice
+  ```
+
+### 4. **Ajouter des Lignes de Facture**
+
+Les factures sont composées de **lignes de facture** qui détaillent les produits ou services facturés. Dans ce cas, chaque propriété vendue doit avoir une ou plusieurs lignes de facture. Par exemple, la facture peut comporter deux lignes :
+
+1. **Commissions sur la vente** : Un pourcentage du prix de vente de la propriété (par exemple, 6 %).
+2. **Frais administratifs** : Un montant fixe pour les frais de gestion (par exemple, 100 $).
+
+- **Ajout de lignes de facture** :
+  ```python
+  from odoo import Command
+
+  def create_invoice_lines(self, invoice):
+      price = self.price_sale  # Prix de vente de la propriété
+
+      # Lignes de facture : commission et frais administratifs
+      lines = [
+          Command.create({
+              'name': 'Commission de vente',
+              'quantity': 1,
+              'price_unit': price * 0.06,  # 6% du prix de vente
+          }),
+          Command.create({
+              'name': 'Frais administratifs',
+              'quantity': 1,
+              'price_unit': 100.0,  # Frais fixes
+          })
+      ]
+      # Ajout des lignes à la facture
+      invoice.write({
+          'invoice_line_ids': lines,
+      })
+  ```
+
+### 5. **Résumer les Étapes**
+
+- **Créer un module de lien (`estate_account`)** : Ce module dépend des modules `estate` et `account`.
+- **Personnaliser l'action « Vendue » dans `estate.property`** : Lorsque la propriété est vendue, une facture doit être générée.
+- **Créer une facture** : Utilisez le modèle `account.move` pour créer une facture liée à l'acheteur.
+- **Ajouter des lignes de facture** : Calculer les lignes de facture, telles que la commission sur la vente et les frais administratifs, et les ajouter à la facture.
+
+### Conclusion
+
+Ce chapitre montre comment étendre Odoo pour intégrer des modules entre eux, en l'occurrence entre un module immobilier et un module comptable. Le but est de créer des factures automatiquement lorsqu'une propriété est vendue, ce qui illustre bien la modularité d'Odoo. Ce processus implique de créer un module de liaison, de personnaliser des méthodes existantes, et de créer des objets liés à d'autres modules via les API Odoo.
+------------
+Le chapitre 13 se concentre sur l'interaction entre plusieurs modules dans Odoo, notamment comment étendre un module immobilier pour créer une facture dès qu'une propriété est marquée comme "Vendue". Voici une explication détaillée des concepts abordés dans ce chapitre sans les exercices :
+
+### **Introduction à l'intégration entre modules**
+
+Odoo est un système modulaire où chaque module peut ajouter des fonctionnalités spécifiques. Un des principes clés est la **modularité**, ce qui signifie que différents modules peuvent fonctionner indépendamment, mais certains modules peuvent aussi interagir et se dépendre les uns des autres.
+
+Dans le contexte de ce chapitre, l'objectif est d'intégrer deux modules :
+1. **Le module immobilier** (gérant les propriétés) : Ce module permet de gérer les propriétés, d'afficher leur statut, de les vendre, etc.
+2. **Le module comptabilité** : Ce module est responsable de la gestion financière, notamment la facturation des clients.
+
+Le défi ici est de lier ces deux modules. En d'autres termes, lorsqu'une propriété est vendue, une **facture** doit être automatiquement générée dans le module de comptabilité.
+
+### **Création d'un module de liaison**
+
+Un **module de liaison** (aussi appelé module de "link") est un module qui ne contient pas de fonctionnalités indépendantes, mais qui permet d'ajouter des fonctionnalités supplémentaires uniquement si certains modules sont installés.
+
+Par exemple, si une agence immobilière veut utiliser la fonctionnalité de facturation avec son système immobilier, elle aura besoin de ce module de liaison qui connecte les deux. Mais si l'agence ne veut pas utiliser la facturation, elle peut simplement ne pas installer ce module de liaison. Cela permet de maintenir les modules indépendants, tout en ajoutant des fonctionnalités supplémentaires lorsque cela est nécessaire.
+
+### **Interaction entre modules : Quand une propriété est vendue**
+
+Une fois qu'un module de liaison est créé, la prochaine étape consiste à lier les actions du module immobilier à celles du module comptabilité.
+
+Le cas que l'on examine ici est le suivant : Lorsqu'une propriété est marquée comme **"Vendue"**, une **facture** doit être générée automatiquement. Cela nécessite de modifier l'action associée à la vente d'une propriété pour y intégrer la logique de création de factures.
+
+### **Étendre le modèle `estate.property`**
+
+Dans Odoo, **les actions** (comme marquer une propriété comme vendue) sont souvent liées à des méthodes dans des modèles. Un **modèle** est une classe en Python qui définit les données et comportements d'un objet dans Odoo. Par exemple, le modèle `estate.property` définit les propriétés immobilières.
+
+Pour ajouter la création de facture à l'action "Vendu", nous devons **étendre** le modèle `estate.property` en ajoutant une nouvelle logique dans la méthode qui est appelée lorsque l'on marque une propriété comme "Vendue". Cela se fait en utilisant le concept d'**héritage de modèle** dans Odoo, où on peut ajouter ou modifier le comportement d'un modèle existant.
+
+En héritant du modèle `estate.property`, on peut **substituer** la méthode qui est appelée lorsque l'on appuie sur le bouton "Vendu" pour y ajouter la logique de création de facture.
+
+### **Création de la facture**
+
+Une fois la méthode `action_sold` modifiée, l'étape suivante consiste à générer une **facture** dans le module comptabilité.
+
+Odoo utilise des modèles pour chaque type d'objet, et pour la facturation, le modèle est `account.move`. Ce modèle permet de créer une facture, mais pour ce faire, nous devons lui fournir certaines informations essentielles, comme :
+- **`partner_id`** : Cela fait référence au client auquel la facture est adressée. Dans ce cas, il s'agit de l'acheteur de la propriété.
+- **`move_type`** : Il définit le type de facture. Pour une vente, cela sera une **facture client** (`out_invoice`).
+- **`journal_id`** : Chaque facture dans Odoo doit être associée à un journal comptable. Cela peut être un journal de vente, par exemple.
+
+En utilisant ces informations, on peut créer une facture vide.
+
+### **Ajout des lignes de facture**
+
+Une facture n'est pas seulement un document vide ; elle contient des **lignes de facture** qui décrivent les produits ou services facturés. Dans le cas d'une propriété vendue, les lignes de facture doivent décrire le montant de la vente ainsi que les éventuels frais supplémentaires.
+
+Par exemple, pour une vente de propriété, on pourrait avoir deux lignes de facture :
+1. **La commission de vente**, qui est un pourcentage du prix de la propriété (par exemple 6% du prix de vente).
+2. **Les frais administratifs**, qui sont un montant fixe (par exemple 100 $).
+
+Ces lignes sont ajoutées à la facture lors de sa création. Dans Odoo, la relation entre une facture et ses lignes est gérée par des champs **One2many**. Cela signifie qu'une facture peut avoir plusieurs lignes de facture associées.
+
+Lors de la création de la facture, ces lignes peuvent être ajoutées à l'aide d'une commande spéciale (appelée **Command.create**), qui permet de créer des lignes et de les associer directement à la facture.
+
+### **En résumé**
+
+Ce chapitre montre comment interagir avec d'autres modules dans Odoo, en l'occurrence entre un module immobilier et un module de comptabilité. L'objectif est d'étendre le module immobilier pour qu'il crée automatiquement une facture dans le module comptabilité chaque fois qu'une propriété est vendue. Pour cela, il faut :
+1. Créer un module de liaison qui connecte les modules immobilier et comptabilité.
+2. Modifier l'action de vente d'une propriété pour y ajouter la création d'une facture.
+3. Créer la facture avec les informations nécessaires, comme le client, le type de facture et le journal comptable.
+4. Ajouter les lignes de facture qui détaillent les frais, comme la commission et les frais administratifs.
+
+Cette approche est un excellent exemple de la manière dont Odoo permet de personnaliser et d'intégrer différents modules pour répondre aux besoins spécifiques d'un processus métier.

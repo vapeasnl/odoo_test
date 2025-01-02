@@ -1,0 +1,151 @@
+Le chapitre que vous présentez se concentre sur l'ajout de **logique métier** aux boutons d'action 
+dans un module Odoo. Voici un résumé détaillé des objectifs et des concepts qui sont introduits 
+dans cette section, ainsi qu'un guide étape par étape pour la réalisation des exercices.
+
+### Objectifs
+
+1. **Annuler ou définir une propriété comme vendue** : Vous devez créer deux boutons pour gérer 
+l'état d'une propriété, « Annuler » et « Vendu », et ajouter des restrictions pour empêcher 
+les modifications conflictuelles (une propriété annulée ne peut pas être vendue et vice versa).
+   
+2. **Accepter ou refuser une offre** : Lorsqu'une offre est acceptée, vous devez fixer le prix 
+de vente et l'acheteur de la propriété en conséquence. Cela introduit la gestion des offres dans 
+le modèle immobilier.
+
+### Explication des concepts clés
+
+#### 1. **Boutons d'action dans la vue**
+Les boutons dans Odoo sont définis dans les vues XML et sont associés à des actions Python. 
+Les boutons peuvent être utilisés pour déclencher des méthodes qui exécutent de la logique métier 
+dans votre module.
+
+- **Définition d'un bouton dans la vue** :
+  Un bouton peut être ajouté dans l'interface utilisateur à l'aide de la balise `<button>`. 
+Dans cet exemple, vous ajoutez un bouton pour effectuer une action spécifique :
+
+  ```xml
+  <form>
+      <header>
+          <button name="action_do_something" type="object" string="Do Something"/>
+      </header>
+      <sheet>
+          <field name="name"/>
+      </sheet>
+  </form>
+  ```
+  - `name="action_do_something"` : Ce nom fait référence à la méthode Python que vous définissez 
+dans votre modèle.
+  - `type="object"` : Cela indique que le bouton exécutera une méthode dans le modèle lorsque cliqué.
+  - `string="Do Something"` : Texte affiché sur le bouton.
+
+- **La méthode Python correspondante** :
+  Vous associez le bouton à une méthode Python. Voici un exemple :
+  ```python
+  from odoo import fields, models
+
+  class TestAction(models.Model):
+      _name = "test.action"
+
+      name = fields.Char()
+
+      def action_do_something(self):
+          for record in self:
+              record.name = "Something"
+          return True
+  ```
+  - **Pourquoi `self` ?** Dans cette méthode, `self` fait référence à l'enregistrement ou 
+aux enregistrements du modèle sur lesquels l'action est effectuée.
+  - **Retourner `True`** : Une méthode publique dans Odoo doit toujours retourner quelque chose, 
+et dans ce cas, `True` permet à l'appel RPC de se compléter correctement.
+
+#### 2. **Annuler et définir une propriété comme vendue**
+Dans cet exercice, vous devez ajouter deux boutons pour gérer l'état d'une propriété : "Annuler" 
+et "Vendu". Vous devrez ajouter des contrôles pour éviter qu'une propriété ne soit vendue ou annulée 
+deux fois.
+
+- **Modèle `estate.property`** :
+  Vous devez ajouter des méthodes pour gérer les boutons "Annuler" et "Vendu". Voici un exemple de code
+pour la gestion de ces états :
+
+  ```python
+  from odoo import fields, models, api
+  from odoo.exceptions import UserError
+
+  class EstateProperty(models.Model):
+      _name = "estate.property"
+
+      name = fields.Char()
+      state = fields.Selection([
+          ('draft', 'Draft'),
+          ('sold', 'Sold'),
+          ('cancelled', 'Cancelled')
+      ], default='draft')
+
+      def action_cancel(self):
+          for record in self:
+              if record.state == 'sold':
+                  raise UserError("La propriété est déjà vendue et ne peut pas être annulée.")
+              record.state = 'cancelled'
+
+      def action_sold(self):
+          for record in self:
+              if record.state == 'cancelled':
+                  raise UserError("La propriété a été annulée et ne peut pas être vendue.")
+              record.state = 'sold'
+  ```
+  - **`action_cancel` et `action_sold`** : Ces méthodes changent l'état de la propriété. Si l'état actuel
+est incompatible avec l'action (par exemple, une propriété vendue ne peut pas être annulée), 
+une erreur est levée avec `UserError`.
+
+#### 3. **Accepter ou refuser une offre**
+Vous devez permettre l'acceptation ou le refus d'une offre. Lorsque l'offre est acceptée, le prix de vente
+et l'acheteur de la propriété sont fixés.
+
+- **Modèle `estate.property.offer`** :
+  Vous devez ajouter des boutons dans le modèle des offres immobilières pour accepter ou refuser 
+une offre. Voici un exemple de code pour gérer ces actions :
+  ```python
+  class EstatePropertyOffer(models.Model):
+      _name = "estate.property.offer"
+
+      price = fields.Float()
+      status = fields.Selection([('accepted', 'Accepted'), ('refused', 'Refused')], default='refused')
+      property_id = fields.Many2one('estate.property')
+      partner_id = fields.Many2one('res.partner')
+
+      def action_accept_offer(self):
+          for offer in self:
+              if offer.status == 'accepted':
+                  raise UserError("Cette offre a déjà été acceptée.")
+              offer.status = 'accepted'
+              offer.property_id.price = offer.price
+              offer.property_id.buyer = offer.partner_id
+
+      def action_refuse_offer(self):
+          for offer in self:
+              if offer.status == 'refused':
+                  raise UserError("Cette offre a déjà été refusée.")
+              offer.status = 'refused'
+  ```
+  - **Gestion des offres** : Lorsqu'une offre est acceptée, son prix et l'acheteur de la propriété 
+sont fixés.
+  - **Limitation** : Comme dans la réalité, une seule offre peut être acceptée pour une propriété.
+
+#### 4. **Utilisation des icônes sur les boutons**
+Dans Odoo, vous pouvez aussi utiliser des icônes dans les boutons pour améliorer 
+l'expérience utilisateur. Voici un exemple :
+```xml
+<button name="action_accept_offer" type="object" string="Accept" icon="fa-check"/>
+<button name="action_refuse_offer" type="object" string="Refuse" icon="fa-times"/>
+```
+- **`icon="fa-check"` et `icon="fa-times"`** : Ces attributs ajoutent des icônes de confirmation 
+et de refus, respectivement, à vos boutons.
+
+---
+
+### Conclusion
+
+À la fin de cette section, vous serez capable d'ajouter des boutons pour effectuer des actions métiers 
+spécifiques dans Odoo. Vous apprendrez à associer des méthodes Python à ces boutons et à gérer 
+les erreurs potentielles dans l'interface utilisateur. Ces actions sont cruciales pour interagir 
+de manière dynamique avec les données et faire évoluer les états des objets dans votre application Odoo.

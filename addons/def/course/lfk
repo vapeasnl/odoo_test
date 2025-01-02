@@ -1,0 +1,104 @@
+Les vues **List** et **Kanban** sont deux types de vues largement utilisées dans Odoo pour afficher les données d'un modèle. Chacune a des caractéristiques distinctes qui conviennent à des cas d'utilisation différents.
+
+### 1. **Vue Liste (List View)**
+
+La vue **Liste** est utilisée pour afficher une liste de plusieurs enregistrements sous forme de tableau. Chaque ligne de la table représente un enregistrement, et chaque colonne correspond à un champ spécifique du modèle. La vue Liste est souvent utilisée pour des modèles où les utilisateurs ont besoin de visualiser une grande quantité d'enregistrements rapidement et de manière structurée.
+
+#### Caractéristiques :
+- **Affichage en tableau** : Chaque enregistrement est représenté par une ligne, et chaque champ est une colonne.
+- **Filtrage et recherche** : Les utilisateurs peuvent filtrer, rechercher et trier les enregistrements.
+- **Actions de masse** : Les utilisateurs peuvent effectuer des actions sur plusieurs enregistrements simultanément (par exemple, modifier plusieurs éléments).
+- **Modification rapide** : Dans certains cas, les utilisateurs peuvent modifier directement les champs de la liste.
+
+#### Exemple de Vue Liste en XML :
+
+```xml
+<record id="view_property_list" model="ir.ui.view">
+    <field name="name">property.list.view</field>
+    <field name="model">estate.property</field>
+    <field name="arch" type="xml">
+        <tree>
+            <field name="name"/>
+            <field name="price"/>
+            <field name="state"/>
+            <field name="owner_id"/>
+        </tree>
+    </field>
+</record>
+```
+
+- **`<tree>`** : définit la structure de la vue liste.
+- **`<field name="..."/>`** : chaque champ que vous voulez afficher dans la liste doit être inclus ici.
+
+#### Personnalisation de la Vue Liste :
+- **Filtrage** : Vous pouvez ajouter des filtres pour rendre la recherche plus spécifique.
+- **Action rapide** : Vous pouvez activer des options de modification rapide ou d'ajout.
+- **Tri** : Par défaut, Odoo trie les enregistrements par ordre croissant du premier champ affiché, mais ce tri peut être personnalisé.
+
+---
+
+### 2. **Vue Kanban (Kanban View)**
+
+La vue **Kanban** est utilisée pour afficher les enregistrements sous forme de cartes (ou "briques") organisées en colonnes, souvent basée sur un champ spécifique (par exemple, l'état d'un processus). Cela permet de visualiser l'avancement d'un processus ou de gérer les enregistrements de manière plus visuelle.
+
+#### Caractéristiques :
+- **Affichage en cartes** : Chaque enregistrement est affiché sous forme de carte avec des informations clés.
+- **Colonnes dynamiques** : Les cartes sont regroupées en colonnes basées sur un champ, comme le statut ou l'étape d'un processus (par exemple, "Nouveau", "En cours", "Terminé").
+- **Interactivité** : Les utilisateurs peuvent interagir directement avec les cartes (glisser-déposer, cliquer pour éditer, etc.).
+- **Aperçu visuel** : Idéale pour les processus qui nécessitent un suivi visuel comme les ventes, les projets ou les tâches.
+
+#### Exemple de Vue Kanban en XML :
+
+```xml
+<record id="view_property_kanban" model="ir.ui.view">
+    <field name="name">property.kanban.view</field>
+    <field name="model">estate.property</field>
+    <field name="arch" type="xml">
+        <kanban>
+            <field name="state"/>
+            <templates>
+                <t t-name="kanban-box">
+                    <div class="oe_kanban_details">
+                        <strong t-esc="record.name"/>
+                        <div>
+                            <span t-esc="record.price"/>
+                        </div>
+                        <div t-if="record.state == 'sold'">
+                            <span class="badge badge-success">Sold</span>
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+```
+
+- **`<kanban>`** : définit le conteneur de la vue Kanban.
+- **`<field name="state"/>`** : spécifie que les cartes seront regroupées par état.
+- **`<templates>`** : permet de personnaliser l'apparence des cartes avec des données spécifiques.
+
+#### Personnalisation de la Vue Kanban :
+- **Colonnes dynamiques** : Les cartes sont généralement regroupées par un champ de sélection (par exemple, `state`). Vous pouvez afficher un champ comme `state` pour organiser les cartes en colonnes.
+- **Interactivité** : Vous pouvez permettre aux utilisateurs de glisser et déposer les cartes pour modifier leur état ou de configurer des actions spécifiques sur chaque carte.
+- **Aperçu personnalisé** : Le contenu de chaque carte peut être modifié pour afficher des informations pertinentes, comme des images, des boutons d'action, etc.
+
+---
+
+### Comparaison entre Vue Liste et Vue Kanban
+
+| Caractéristique        | Vue Liste                        | Vue Kanban                     |
+|------------------------|----------------------------------|--------------------------------|
+| **Affichage**           | Table avec des lignes et des colonnes | Cartes regroupées en colonnes   |
+| **Utilisation**         | Idéale pour afficher des données structurées | Idéale pour suivre des processus ou projets |
+| **Interactivité**       | Limité (modification directe dans la table) | Plus interactif (glisser-déposer, actions sur cartes) |
+| **Adaptabilité**        | Moins visuelle mais plus formelle | Très visuelle et dynamique      |
+| **Cas d’utilisation**   | Gestion de grandes quantités de données, rapports | Suivi de tâches, gestion de projets, pipelines de vente |
+
+### Utilisation des Vues Liste et Kanban dans Odoo
+
+Vous pouvez choisir la vue qui correspond le mieux aux besoins de votre application. Par exemple :
+- Utilisez une **vue Liste** pour des données simples comme les contacts ou les inventaires.
+- Utilisez une **vue Kanban** pour des processus de type projet ou flux de travail (ex : suivi des opportunités de vente, des tâches d'un projet, ou des étapes d'une commande).
+
+Les deux vues sont entièrement personnalisables et peuvent être combinées dans un même modèle ou module selon les besoins. Par exemple, vous pourriez avoir à la fois une vue Liste et une vue Kanban disponibles pour le même modèle dans une interface utilisateur.

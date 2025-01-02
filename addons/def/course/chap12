@@ -1,0 +1,174 @@
+Le chapitre 12 de la documentation d'Odoo présente deux concepts clés pour l'extension et la personnalisation des modules : l'**héritage Python** et l'**héritage de modèle**. Ces mécanismes permettent de modifier et d'étendre les modules existants d'Odoo, ce qui est particulièrement utile pour ajouter des fonctionnalités sans toucher directement aux modules d'origine. Voici une explication détaillée des concepts et des exercices proposés dans ce chapitre :
+
+### 1. **Héritage Python**
+Odoo utilise l'héritage Python pour personnaliser et étendre les fonctionnalités des modèles de données. Chaque modèle Odoo est une sous-classe de `models.Model`, et vous pouvez redéfinir ou étendre les méthodes CRUD (Create, Read, Update, Delete) pour ajouter de la logique métier spécifique. 
+
+#### Objectif de l'exercice :
+- **Empêcher la suppression d'une propriété** si son état n'est pas "Nouveau" ou "Annulé".
+- **Dissocier l'état d'une propriété lors de la création d'une offre**, et le mettre à "Offre reçue".
+- **Empêcher la création d'une offre** avec un prix inférieur à une offre existante.
+
+#### Explication et Exemple :
+
+- **Méthode `create`** : Cette méthode permet de personnaliser la création d'un enregistrement. Par exemple, lors de la création d'une offre, vous pouvez modifier l'état de la propriété associée.
+  
+  Exemple de logique métier pour l'état de la propriété lors de la création d'une offre :
+  ```python
+  @api.model
+  def create(self, vals):
+      if 'price' in vals and vals['price'] < existing_offer_price:
+          raise ValidationError("Le prix de l'offre ne peut pas être inférieur à une offre existante.")
+      property = self.env['estate.property'].browse(vals['property_id'])
+      property.state = 'Offer Received'
+      return super().create(vals)
+  ```
+
+- **Méthode `unlink`** : Pour empêcher la suppression d'une propriété, vous pouvez redéfinir cette méthode en ajoutant une condition sur l'état de la propriété.
+  
+  Exemple :
+  ```python
+  def unlink(self):
+      for record in self:
+          if record.state not in ['new', 'cancelled']:
+              raise ValidationError("Vous ne pouvez pas supprimer cette propriété, car son état n'est pas 'Nouveau' ou 'Annulé'.")
+      return super().unlink()
+  ```
+
+**Astuce** : Utiliser le décorateur `@api.model` pour la méthode `create`, mais ne pas l'utiliser pour `unlink`, car `unlink` agit sur un ensemble d'enregistrements.
+
+### 2. **Héritage de Modèle**
+Odoo permet d'étendre des modèles existants sans modifier directement leur code source. Il existe deux types d'héritage dans Odoo :
+
+- **Héritage classique** : Permet de **modifier un modèle existant** en y ajoutant des champs, des méthodes, des contraintes, etc.
+- **Héritage par délégation** : Lien direct entre les enregistrements d'un modèle et ceux d'un autre modèle, permettant d'accéder aux champs du modèle parent de manière transparente.
+
+#### Objectif de l'exercice :
+- Ajouter un **champ de propriétés** à `res.users` (modèle des utilisateurs) pour afficher la liste des propriétés liées à un utilisateur dans la vue formulaire de l'utilisateur.
+- Associer ce champ à un **champ One2many** qui fait référence au modèle `estate.property` (modèle immobilier).
+
+#### Explication et Exemple :
+
+Pour ajouter un champ à un modèle existant, on utilise la directive `_inherit` dans la définition du modèle. Cela permet d'ajouter de nouveaux champs ou de modifier des champs existants.
+
+Exemple :
+```python
+from odoo import fields, models
+
+class ResUsers(models.Model):
+    _inherit = 'res.users'
+
+    property_ids = fields.One2many(
+        'estate.property', 
+        'seller_id', 
+        string="Properties"
+    )
+```
+
+Dans cet exemple :
+- `property_ids` est un champ `One2many` qui lie un utilisateur à plusieurs propriétés (`estate.property`).
+- `seller_id` est un champ sur le modèle `estate.property` qui référence l'utilisateur vendeur de la propriété.
+
+### 3. **Héritage de Vue**
+Odoo permet de **modifier les vues** existantes grâce à l'héritage de vue, sans toucher directement aux vues par défaut. Cela permet d'ajouter, de modifier ou de supprimer des éléments dans les vues existantes.
+
+#### Objectif de l'exercice :
+- Ajouter un champ dans la vue utilisateur pour afficher les propriétés liées à l'utilisateur dans une nouvelle section.
+
+#### Explication et Exemple :
+
+Pour modifier une vue, vous utilisez l'attribut `inherit_id` pour référencer la vue existante à modifier et la modifier à l'aide de `xpath`. Cela permet de localiser un élément précis dans la vue et de le modifier.
+
+Exemple :
+```xml
+<record id="inherited_user_view" model="ir.ui.view">
+    <field name="name">res.users.form.inherit</field>
+    <field name="model">res.users</field>
+    <field name="inherit_id" ref="base.view_users_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//sheet" position="inside">
+            <group>
+                <field name="property_ids" widget="many2many_tags"/>
+            </group>
+        </xpath>
+    </field>
+</record>
+```
+
+Dans cet exemple :
+- Nous ajoutons un nouveau groupe contenant le champ `property_ids` dans la vue formulaire des utilisateurs (`res.users`).
+- Le champ `property_ids` est affiché avec le widget `many2many_tags`, ce qui permet de visualiser les propriétés associées à l'utilisateur.
+
+### Résumé des Concepts Clés :
+
+- **Héritage Python** permet de personnaliser les méthodes CRUD pour ajouter des règles métier spécifiques.
+- **Héritage de modèle** permet d'étendre les modèles existants pour ajouter des champs ou des méthodes.
+- **Héritage de vue** permet de modifier l'apparence des vues existantes en ajoutant ou en modifiant des éléments dans les vues Odoo sans toucher au code original.
+
+L'héritage est essentiel pour travailler avec Odoo de manière modulaire, ce qui facilite l'extension et la personnalisation des fonctionnalités tout en préservant la compatibilité avec les modules de base.
+----------
+Voici une explication détaillée, sans les exercices, des concepts d'**héritage Python**, **héritage de modèle**, et **héritage de vue** dans Odoo.
+
+### 1. **Héritage Python**
+
+Dans Odoo, l'héritage Python est utilisé pour personnaliser et étendre les fonctionnalités des modèles existants, en particulier les opérations de base (CRUD : Créer, Lire, Mettre à jour, Supprimer) sur les enregistrements. Chaque modèle Odoo hérite de la classe de base `models.Model`, ce qui lui permet d'utiliser un certain nombre de méthodes de gestion des enregistrements. Vous pouvez redéfinir ou étendre ces méthodes pour ajouter des règles métier spécifiques à votre modèle.
+
+- **CRUD et Méthodes de Modèle** : Les modèles Odoo fournissent des méthodes comme `create()`, `write()`, `unlink()`, et `read()`, qui gèrent les enregistrements dans la base de données.
+  - **`create(vals)`** : Permet de créer un nouvel enregistrement avec les valeurs spécifiées dans `vals`. Cette méthode peut être personnalisée pour ajouter de la logique avant ou après la création.
+  - **`write(vals)`** : Permet de mettre à jour un ou plusieurs enregistrements existants avec les nouvelles valeurs passées dans `vals`.
+  - **`unlink()`** : Permet de supprimer un ou plusieurs enregistrements. Vous pouvez ajouter des conditions pour empêcher la suppression dans certaines situations.
+  
+  En redéfinissant ces méthodes, vous pouvez ajouter des règles métier comme : 
+  - Vérifier que certaines conditions sont remplies avant de créer ou supprimer un enregistrement.
+  - Mettre à jour d'autres champs ou exécuter une logique spécifique lors de l'enregistrement des données.
+
+- **Utilisation de `super()`** : Lorsque vous personnalisez ces méthodes, il est crucial d’appeler `super()` pour s'assurer que la logique du modèle parent est exécutée. Par exemple, dans `create()`, vous pouvez ajouter de la logique avant ou après l’appel de la méthode parent qui effectue la création dans la base de données.
+
+### 2. **Héritage de Modèle**
+
+Odoo permet l'extension des modèles existants grâce à l'héritage de modèle. Cela permet de modifier ou d'ajouter des fonctionnalités sans avoir à modifier le modèle de base directement. L'héritage de modèle est très utilisé pour étendre les modèles de base d'Odoo afin d'ajouter des champs, des méthodes ou des contraintes sans toucher au code source d'origine.
+
+- **_inherit** : Pour ajouter des champs ou des méthodes à un modèle existant, vous utilisez l'attribut `_inherit` dans la classe du modèle. Par exemple, si vous souhaitez ajouter un champ à un modèle existant comme `res.users` (le modèle des utilisateurs), vous pouvez créer un modèle qui hérite de `res.users` et y ajouter de nouveaux champs ou méthodes.
+  
+  Exemple :
+  ```python
+  class ResUsers(models.Model):
+      _inherit = 'res.users'
+
+      new_field = fields.Char(string="New Field")
+  ```
+
+  Cela permet d'ajouter un nouveau champ `new_field` à tous les utilisateurs d'Odoo sans avoir à modifier directement le modèle `res.users`. En utilisant `_inherit`, le modèle original reste intact, et vous ajoutez uniquement des fonctionnalités spécifiques.
+
+- **Types d'héritage** :
+  - **Héritage classique** : Le modèle hérité peut ajouter des champs, remplacer des champs existants, ajouter des méthodes, ou modifier la logique du modèle parent. Il s'agit de l'héritage le plus utilisé.
+  - **Héritage par délégation** : Ce type d'héritage est utilisé pour relier un modèle à un autre, créant ainsi une relation de type "parent-enfant". Il permet d’accéder aux champs du modèle parent via un lien transparent entre les enregistrements.
+
+### 3. **Héritage de Vue**
+
+L'héritage de vue dans Odoo permet de modifier l'interface utilisateur (UI) d'un modèle sans avoir à changer le code source des vues par défaut. Cela est particulièrement utile lorsqu'il est nécessaire de personnaliser l'apparence ou la disposition des formulaires ou des vues de liste d'Odoo.
+
+- **Extension des vues avec `inherit_id`** : Au lieu de modifier une vue existante, Odoo permet d'étendre une vue via l'attribut `inherit_id`. Cela permet de créer une nouvelle vue qui fait référence à une vue parente et de la modifier à l'aide d'éléments XML. Cette méthode d’héritage empêche la modification directe de la vue parente et permet d’appliquer des modifications spécifiques au besoin.
+  
+  Exemple :
+  ```xml
+  <record id="inherited_user_view" model="ir.ui.view">
+      <field name="name">res.users.form.inherit</field>
+      <field name="model">res.users</field>
+      <field name="inherit_id" ref="base.view_users_form"/>
+      <field name="arch" type="xml">
+          <xpath expr="//sheet" position="inside">
+              <group>
+                  <field name="property_ids" widget="many2many_tags"/>
+              </group>
+          </xpath>
+      </field>
+  </record>
+  ```
+
+  - Dans cet exemple, une nouvelle vue est créée en référence à la vue formulaire des utilisateurs (`base.view_users_form`), et un champ est ajouté dans la section `<sheet>` de la vue en utilisant `xpath`. La nouvelle vue ajoute un champ `property_ids` dans la vue utilisateur sans remplacer entièrement la vue parente.
+
+- **Positionnement avec XPath** : Vous pouvez spécifier où et comment vous voulez ajouter ou modifier des éléments dans une vue parente en utilisant des expressions XPath. Cela permet de localiser précisément un élément à modifier ou à étendre, comme un champ ou un groupe de champs.
+
+### Conclusion
+
+L'héritage dans Odoo permet de **modifier ou d'étendre les modèles et les vues** de manière modulaire. Cela offre une grande flexibilité, car vous pouvez ajouter de nouvelles fonctionnalités ou modifier des comportements sans affecter directement les modules d'origine. L'héritage Python permet de personnaliser la logique métier, tandis que l'héritage de modèle et de vue vous permet d’ajouter des champs et de personnaliser l'interface utilisateur sans perturber la structure de base. Ces mécanismes permettent d'étendre Odoo pour répondre aux besoins spécifiques de chaque entreprise tout en préservant la compatibilité avec les autres modules et les futures mises à jour.

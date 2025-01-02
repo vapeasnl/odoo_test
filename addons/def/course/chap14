@@ -1,0 +1,266 @@
+Le **chapitre 14** se concentre sur l'utilisation du moteur de templates QWeb pour améliorer l'interface utilisateur d'un module Odoo, en particulier pour créer des vues Kanban. Voici une explication détaillée des concepts abordés dans ce chapitre :
+
+### **Introduction à QWeb et aux vues Kanban**
+
+Odoo utilise **QWeb**, un moteur de création de modèles XML intégré, pour générer des pages HTML et des rapports (comme des fichiers PDF). QWeb permet de créer des vues personnalisées avec plus de flexibilité que les vues de base comme les vues de liste ou formulaire.
+
+L'un des types de vue que vous pouvez créer dans Odoo est la **vue Kanban**, qui est souvent utilisée pour afficher des enregistrements sous forme de cartes visuelles, comme un tableau de bord. Ce type de vue permet une organisation par catégories et est très utilisé pour afficher des informations de manière condensée mais claire.
+
+### **Création d'une vue Kanban basique**
+
+Voici un exemple minimal de vue Kanban dans Odoo :
+
+```xml
+<kanban>
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+#### **Explication du code :**
+1. **`<kanban>`** : C'est l'élément racine qui définit la vue Kanban.
+2. **`<templates>`** : Définit un ou plusieurs modèles QWeb à utiliser dans la vue Kanban. Chaque modèle est associé à un ou plusieurs enregistrements à afficher.
+3. **`<t t-name="kanban-box">`** : C'est un modèle qui sera utilisé pour rendre chaque enregistrement sous forme de carte. Le `t-name="kanban-box"` est nécessaire pour identifier ce modèle comme celui qui génère les cartes.
+4. **`<field name="name"/>`** : Affiche le champ `name` de chaque enregistrement sur la carte.
+
+Ce modèle très simple crée une carte Kanban affichant le nom d'une propriété.
+
+### **Utilisation des conditions avec QWeb**
+
+Une fois que vous avez créé une vue Kanban de base, vous pouvez ajouter des éléments conditionnels avec la directive **`t-if`** pour afficher certaines informations sous certaines conditions.
+
+Exemple d'utilisation de **`t-if`** pour afficher un message "This is new!" seulement si l'état de la propriété est "new" :
+
+```xml
+<kanban>
+    <field name="state"/>
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <div t-if="record.state.raw_value == 'new'">
+                    This is new!
+                </div>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+#### **Explication :**
+- **`t-if="record.state.raw_value == 'new'"`** : Cette condition vérifie si le champ `state` de l'enregistrement est égal à `'new'`. Si c'est le cas, le message "This is new!" sera affiché.
+- **`record`** : Représente l'enregistrement actuel. Vous pouvez accéder à ses champs et valeurs dans la vue Kanban.
+- **`raw_value`** : C'est la valeur brute d'un champ sans formatage, contrairement à `value` qui pourrait être formaté (par exemple, une date affichée selon la configuration de l'utilisateur).
+
+### **Améliorer la vue Kanban**
+
+Pour améliorer la vue Kanban, vous pouvez ajouter d'autres champs, comme le prix attendu, le meilleur prix, le prix de vente, et des étiquettes.
+
+```xml
+<kanban>
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <div t-if="record.state.raw_value == 'new'">
+                    This is new!
+                </div>
+                <field name="expected_price"/>
+                <div t-if="record.best_price">
+                    Best price: <field name="best_price"/>
+                </div>
+                <div t-if="record.state.raw_value == 'sold'">
+                    Sold for: <field name="selling_price"/>
+                </div>
+                <field name="tags"/>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+#### **Explication :**
+- **`<field name="expected_price"/>`** : Affiche le prix attendu de la propriété.
+- **`<div t-if="record.best_price">`** : Affiche le meilleur prix si une offre a été reçue.
+- **`<div t-if="record.state.raw_value == 'sold'">`** : Affiche le prix de vente uniquement si l'état de la propriété est "vendue".
+- **`<field name="tags"/>`** : Affiche les tags associés à la propriété (par exemple, "à vendre", "en promotion", etc.).
+
+### **Regroupement des propriétés par type**
+
+Une fois la vue Kanban de base améliorée, vous pouvez **regrouper** les propriétés selon un critère, par exemple, par type de propriété. Cela peut être fait en utilisant l'attribut `group_by` dans la vue Kanban.
+
+```xml
+<kanban group_by="type">
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <!-- Autres champs à afficher -->
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+#### **Explication :**
+- **`group_by="type"`** : Cela indique que les propriétés doivent être regroupées par leur type (par exemple, maison, appartement, terrain).
+- **`group_by`** permet de structurer les cartes Kanban par catégories, ce qui permet aux utilisateurs de mieux organiser les informations.
+
+### **Prévenir le glisser-déposer**
+
+Les vues Kanban dans Odoo permettent par défaut de déplacer les cartes d'un groupe à un autre (par exemple, passer une propriété de "en vente" à "vendue"). Si vous ne souhaitez pas autoriser cette fonctionnalité, vous pouvez la désactiver.
+
+```xml
+<kanban options="{'disable_drag': True}">
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <!-- Autres champs -->
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+#### **Explication :**
+- **`options="{'disable_drag': True}"`** : Cela désactive la fonctionnalité de glisser-déposer, empêchant l'utilisateur de déplacer les cartes Kanban.
+
+### **Conclusion**
+
+Les vues Kanban sont un moyen puissant et flexible d'afficher des enregistrements sous forme de cartes interactives dans Odoo. Grâce à QWeb, vous pouvez personnaliser l'apparence de chaque carte, ajouter des conditions, afficher des informations supplémentaires et regrouper les enregistrements de manière logique. L'intégration de ces vues avec des modèles Odoo vous permet de créer des interfaces utilisateur interactives et visuellement attrayantes.
+-------
+Le chapitre 14 porte sur l'utilisation de **QWeb**, le moteur de templates d'Odoo, et comment l'appliquer à la création de **vues Kanban**. Odoo utilise QWeb pour générer des pages HTML et des rapports (comme des fichiers PDF). QWeb permet de structurer et d'afficher des informations sous forme de vues personnalisées, ce qui est très utile pour donner un aspect visuel spécifique à l'application.
+
+### **Le moteur QWeb dans Odoo**
+QWeb est un moteur de création de modèles basé sur **XML**. Contrairement à d'autres moteurs de templates comme Jinja (utilisé avec Python), QWeb est intégré à Odoo et permet de générer des pages ou des fragments HTML à partir de modèles définis dans le code XML.
+
+**QWeb est principalement utilisé pour :**
+- Créer des rapports PDF (comme les factures, les devis, etc.).
+- Générer des vues HTML personnalisées dans Odoo, telles que les vues de liste, de formulaire, ou Kanban.
+- Créer des templates réutilisables pour structurer les éléments d'une interface.
+
+### **Les vues Kanban dans Odoo**
+Les **vues Kanban** dans Odoo sont une forme de vue très populaire qui affiche les enregistrements sous forme de cartes visuelles. Chaque carte représente un enregistrement, et les utilisateurs peuvent interagir avec ces cartes, par exemple, en les déplaçant entre des colonnes (ou catégories).
+
+Odoo propose déjà des vues standards comme la vue **Liste** (qui montre des enregistrements sous forme de lignes) ou la vue **Formulaire** (qui permet de visualiser et modifier un enregistrement en détail). Mais si vous souhaitez aller plus loin et donner un aspect plus visuel et dynamique à vos enregistrements, la vue Kanban est un excellent choix.
+
+### **Structure de base d'une vue Kanban**
+Une vue Kanban dans Odoo est définie à l'aide de la balise `<kanban>` et contient un ou plusieurs modèles **QWeb** pour afficher les données. Le modèle principal utilisé pour chaque enregistrement est appelé `kanban-box`.
+
+Voici un exemple basique de la structure d'une vue Kanban :
+
+```xml
+<kanban>
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+**Explication de chaque élément :**
+1. **`<kanban>`** : C'est l'élément racine qui définit que vous travaillez avec une vue Kanban.
+2. **`<templates>`** : Cette balise contient les modèles qui seront utilisés pour afficher les enregistrements.
+3. **`<t t-name="kanban-box">`** : Le modèle `kanban-box` est utilisé pour afficher chaque carte dans la vue Kanban. Le `t-name` sert à identifier ce modèle.
+4. **`<field name="name"/>`** : Affiche un champ spécifique (ici, le champ `name`) pour chaque enregistrement dans la vue Kanban.
+
+### **Afficher des informations conditionnelles avec QWeb**
+Vous pouvez utiliser des **conditions** dans QWeb pour afficher des éléments uniquement lorsque certaines conditions sont remplies. Cela se fait avec la directive **`t-if`**.
+
+Par exemple, pour afficher un message particulier lorsque l'état d'un enregistrement est "new" (nouveau), vous pouvez ajouter un élément conditionnel comme ceci :
+
+```xml
+<div t-if="record.state.raw_value == 'new'">
+    This is new!
+</div>
+```
+
+**Explication :**
+- **`t-if="record.state.raw_value == 'new'"`** : La condition vérifie si l'état de l'enregistrement est "new". Si cette condition est vraie, le contenu du `div` sera affiché.
+- **`record`** : Représente un enregistrement dans la vue Kanban. Vous pouvez accéder à ses champs en utilisant `record.<field_name>`.
+- **`raw_value`** : C'est la valeur brute d'un champ (sans formatage), contrairement à `value` qui est la valeur formatée selon les préférences de l'utilisateur.
+
+### **Amélioration de la vue Kanban**
+Une fois que vous avez la vue Kanban de base, vous pouvez **l'améliorer** en ajoutant plus de champs, en utilisant des conditions pour afficher certains champs uniquement dans certaines situations, ou en personnalisant l'affichage pour chaque enregistrement.
+
+Par exemple, vous pouvez ajouter d'autres champs comme le prix de vente, le prix attendu, ou même un indicateur pour les propriétés qui ont reçu une offre. Voici un exemple :
+
+```xml
+<kanban>
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <div t-if="record.state.raw_value == 'new'">
+                    This is new!
+                </div>
+                <field name="expected_price"/>
+                <div t-if="record.best_price">
+                    Best price: <field name="best_price"/>
+                </div>
+                <div t-if="record.state.raw_value == 'sold'">
+                    Sold for: <field name="selling_price"/>
+                </div>
+                <field name="tags"/>
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+**Explication :**
+- **`<field name="expected_price"/>`** : Affiche le prix attendu d'une propriété.
+- **`<div t-if="record.best_price">`** : Affiche le meilleur prix si ce champ a une valeur (cela indique que l'offre a été reçue).
+- **`<div t-if="record.state.raw_value == 'sold'">`** : Affiche le prix de vente uniquement si l'état de la propriété est "vendue".
+- **`<field name="tags"/>`** : Affiche les tags associés à la propriété (par exemple, "en vente", "réduit", etc.).
+
+### **Regroupement des enregistrements dans la vue Kanban**
+Une des fonctionnalités importantes des vues Kanban est la possibilité de **regrouper** les enregistrements selon un critère spécifique (par exemple, par type de propriété, par statut, etc.). Cela peut être fait en utilisant l'attribut `group_by` dans la vue Kanban.
+
+```xml
+<kanban group_by="type">
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <!-- Autres champs à afficher -->
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+**Explication :**
+- **`group_by="type"`** : Cela regroupe les enregistrements par type de propriété (par exemple, "maison", "appartement", etc.).
+- En utilisant `group_by`, Odoo organise automatiquement les cartes en fonction de ce critère, ce qui permet aux utilisateurs de mieux organiser et visualiser les données.
+
+### **Désactivation du glisser-déposer**
+Les vues Kanban d'Odoo permettent de déplacer les cartes d'un groupe à un autre (glisser-déposer). Si vous ne souhaitez pas autoriser cette fonctionnalité, vous pouvez la désactiver en utilisant l'option `disable_drag`.
+
+```xml
+<kanban options="{'disable_drag': True}">
+    <templates>
+        <t t-name="kanban-box">
+            <div>
+                <field name="name"/>
+                <!-- Autres champs -->
+            </div>
+        </t>
+    </templates>
+</kanban>
+```
+
+**Explication :**
+- **`options="{'disable_drag': True}"`** : Cette option empêche l'utilisateur de déplacer les cartes d'un groupe à un autre, ce qui peut être utile si vous voulez éviter les modifications non désirées dans l'ordre des enregistrements.
+
+### **Résumé**
+En résumé, QWeb dans Odoo permet de créer des vues et des rapports dynamiques à partir de modèles XML. Les vues Kanban sont une manière visuelle et flexible d'afficher les données dans Odoo, avec la possibilité d'ajouter des champs, d'appliquer des conditions d'affichage, de regrouper les enregistrements et de personnaliser l'interface. Le moteur QWeb permet également d'intégrer des fonctionnalités telles que l'affichage conditionnel, la gestion des prix et des statuts, et de structurer l'affichage des données de manière intuitive et visuelle.

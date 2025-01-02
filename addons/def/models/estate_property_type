@@ -1,0 +1,59 @@
+Le modèle `EstatePropertyType` représente les différents types de propriétés immobilières dans Odoo. Voici une explication détaillée de chaque partie du code :
+
+### 1. Définition du modèle :
+```python
+class EstatePropertyType(models.Model):
+    _name = "estate.property.type"
+    _description = "Realestate Property Type"
+    _order = "name asc"
+```
+- **_name** : Le nom du modèle, qui est `estate.property.type`. Ce nom est utilisé pour référencer ce modèle dans la base de données d'Odoo.
+- **_description** : Une description du modèle, ici il s'agit des "types de propriétés immobilières".
+- **_order** : Définit l'ordre de tri des enregistrements retournés. Ici, les types de propriétés sont triés par nom (`name asc` signifie ordre croissant par nom).
+
+### 2. Champs du modèle :
+Les champs représentent les informations associées à chaque type de propriété.
+
+#### a. `name` (Char)
+```python
+name = fields.Char('Property Type Name', required=True)
+```
+- Ce champ enregistre le nom du type de propriété. Il est obligatoire (`required=True`).
+
+#### b. `active` (Boolean)
+```python
+active = fields.Boolean('Active', default=True)
+```
+- Ce champ indique si le type de propriété est actif ou non. Par défaut, il est défini sur `True`, ce qui signifie que le type de propriété est actif.
+
+#### c. `property_ids` (One2many)
+```python
+property_ids = fields.One2many("estate.property", "property_type_id")
+```
+- Ce champ établit une relation **One2many** avec le modèle `estate.property`. Il permet de lier plusieurs propriétés à un type de propriété spécifique. Chaque propriété dans le modèle `estate.property` aura une clé étrangère (`property_type_id`) pointant vers ce modèle `estate.property.type`.
+
+### 3. Contraintes SQL :
+```python
+_sql_constraints = [
+    ('unique_type', 'unique(name)', "Property type already exists.")
+]
+```
+- **unique_type** : Cette contrainte SQL garantit que chaque type de propriété doit avoir un nom unique. Si un utilisateur tente de créer un type de propriété avec un nom déjà existant, Odoo renverra une erreur `"Property type already exists."`
+
+### Utilisation du modèle :
+- Ce modèle permet de gérer différents types de propriétés immobilières. Par exemple, dans un système de gestion immobilière, vous pourriez avoir des types comme "Appartement", "Maison", "Bureau", etc.
+- Dans un autre modèle, comme `EstateProperty`, vous pouvez associer chaque propriété à un type spécifique grâce à un champ `Many2one` :
+
+```python
+property_type_id = fields.Many2one("estate.property.type", string="Property Type")
+```
+
+Cela permet à chaque propriété d'appartenir à un type particulier, et vous pouvez facilement filtrer ou regrouper les propriétés par type.
+
+---
+
+### Exemple d'utilisation :
+Si vous avez des propriétés avec des types comme "Appartement" et "Maison", vous pouvez créer des enregistrements dans ce modèle `EstatePropertyType` pour chaque type, puis associer chaque propriété à l'un de ces types dans le modèle `EstateProperty`.
+
+### Conclusion :
+Ce modèle est utile pour catégoriser les propriétés immobilières selon leur type et offre une gestion simple des types de propriétés dans votre application Odoo. Si vous souhaitez étendre ce modèle ou l'intégrer à d'autres fonctionnalités, n'hésitez pas à demander !

@@ -1,0 +1,70 @@
+**Chapitre 5 : Enfin, une interface utilisateur avec laquelle jouer**
+
+Dans ce chapitre, nous allons explorer comment interagir avec l'interface utilisateur d'Odoo après avoir créé notre modèle et configuré les droits d'accès. L'objectif est de créer des menus, des actions, et des vues pour permettre une gestion facile des données.
+
+### Fichiers de données (XML)
+
+Alors que le format CSV est utilisé pour des données simples, le format **XML** est préféré pour charger des structures plus complexes comme des vues, des actions ou des modèles d'e-mails dans Odoo. Ces fichiers sont ajoutés au dossier **views** et doivent être définis dans le fichier **__manifest__.py**.
+
+Les fichiers de données (CSV et XML) sont chargés de manière séquentielle lors de l'installation ou de la mise à jour du module, ce qui signifie qu'il faut respecter l'ordre de chargement des fichiers si des références croisées existent entre eux (par exemple, un fichier XML faisant référence à un modèle ou un fichier CSV déjà chargé).
+
+### Actions
+
+Les actions sont utilisées pour lier des menus à des modèles et permettre à l'utilisateur de déclencher des vues de listes ou de formulaires. Une action permet de lier un modèle à une vue et de spécifier quel type de vue sera utilisé pour afficher les données.
+
+Voici un exemple d'action XML simple qui lie un menu à un modèle `test_model` :
+
+```xml
+<record id="test_model_action" model="ir.actions.act_window">
+    <field name="name">Test action</field>
+    <field name="res_model">test_model</field>
+    <field name="view_mode">list,form</field>
+</record>
+```
+
+- **name** : Le nom de l'action.
+- **res_model** : Le modèle sur lequel l'action sera exécutée.
+- **view_mode** : Les types de vues qui seront disponibles (ici, liste et formulaire).
+
+### Menus
+
+Les menus dans Odoo sont organisés hiérarchiquement. Le menu racine est affiché dans le sélecteur d'applications, le menu de premier niveau dans la barre supérieure, et les menus d'action sont liés à des modèles spécifiques.
+
+Voici un exemple de structure de menus pour un modèle `test_model` :
+
+```xml
+<menuitem id="test_menu_root" name="Test">
+    <menuitem id="test_first_level_menu" name="First Level">
+        <menuitem id="test_model_menu_action" action="test_model_action"/>
+    </menuitem>
+</menuitem>
+```
+
+Ce code crée une structure de menus avec un menu racine `Test`, un menu de premier niveau `First Level`, et un menu d'action qui déclenche l'action associée au modèle `test_model`.
+
+### Champs, attributs et vue
+
+Les champs du modèle peuvent avoir des attributs spéciaux qui affectent leur comportement dans les vues. Par exemple, nous pouvons définir des valeurs par défaut, rendre des champs en lecture seule, ou empêcher la copie de certains champs lors de la duplication d'enregistrements.
+
+Voici les actions à réaliser dans cet exercice :
+
+1. **Rendre le champ "prix de vente" en lecture seule**.
+2. **Empêcher la copie des champs "prix de vente" et "date de disponibilité" lors de la duplication de l'enregistrement**.
+3. **Définir des valeurs par défaut** pour certains champs (par exemple, un nombre de chambres par défaut ou une date de disponibilité dans 3 mois).
+
+Le modèle peut être enrichi avec des champs réservés comme **active** et **state** qui ont des comportements prédéfinis dans Odoo :
+
+- **active** : Si la valeur est `False`, l'enregistrement n'apparaît plus dans les recherches.
+- **state** : Ce champ peut avoir des valeurs comme `Nouveau`, `Offre reçue`, `Offre acceptée`, `Vendu`, ou `Annulé`, et il peut être obligatoire avec une valeur par défaut.
+
+### Exemples d'exercices :
+
+1. **Ajouter un champ actif** au modèle `estate.property` pour contrôler si l'enregistrement est actif ou non.
+2. **Ajouter un champ d'état** avec les différentes valeurs possibles (ex : `Nouveau`, `Offre reçue`), rendre ce champ obligatoire et définir une valeur par défaut sur "Nouveau".
+3. **Définir des valeurs par défaut** pour certains champs comme le nombre de chambres ou la date de disponibilité.
+
+### Conclusion
+
+Une fois ces éléments configurés, l'utilisateur pourra interagir avec l'interface utilisateur d'Odoo pour gérer les propriétés immobilières à travers des vues personnalisées, des menus et des actions. Le modèle peut être enrichi avec des attributs, des champs réservés et des actions, tout en permettant de définir des règles d'affichage dans les vues. 
+
+L'étape suivante consistera à approfondir la personnalisation des vues pour adapter l'interface utilisateur aux besoins spécifiques du module.

@@ -1,0 +1,378 @@
+Le chapitre 8 d'Odoo sur les **champs calculés** et **onchanges** traite de l'automatisation des valeurs
+de champs dans un modèle en fonction d'autres champs ou de l'entrée utilisateur. 
+Voici une explication détaillée des concepts abordés dans ce chapitre.
+
+
+### Champs calculés
+Les **champs calculés** dans Odoo permettent de définir des champs dont la valeur 
+n'est pas stockée directement dans la base de données mais calculée dynamiquement à chaque fois 
+qu'ils sont accédés. Ces champs sont utiles pour des calculs basés sur d'autres champs du même modèle. 
+Par exemple, dans un modèle immobilier, on peut avoir un champ `surface_totale` qui est la somme 
+de deux autres champs (`surface_habitable` et `surface_jardin`), et ce champ `surface_totale` 
+sera recalculé automatiquement à chaque changement des champs `surface_habitable` ou `surface_jardin`.
+
+
+#### Définition d'un champ calculé
+Un champ calculé est créé en définissant un champ comme **`compute`** et en lui associant une méthode 
+qui calcule sa valeur. Cette méthode doit être définie dans la classe du modèle, et elle doit calculer 
+la valeur du champ pour chaque enregistrement du modèle. Exemple :
+
+
+```python
+from odoo import api, fields, models
+
+
+class TestComputed(models.Model):
+    _name = "test.computed"
+
+
+    total = fields.Float(compute="_compute_total")
+    amount = fields.Float()
+
+
+    @api.depends("amount")
+    def _compute_total(self):
+        for record in self:
+            record.total = 2.0 * record.amount
+```
+
+
+Dans cet exemple, le champ `total` est calculé en fonction de la valeur de `amount`. 
+La méthode `_compute_total` est utilisée pour multiplier la valeur de `amount` par 2 
+et l'affecter à `total`.
+
+
+#### Dépendances
+Les **dépendances** spécifient quelles autres valeurs ou champs doivent être surveillés 
+pour que le champ calculé soit mis à jour. Cela est fait en utilisant le décorateur `@api.depends`, 
+qui permet à Odoo de savoir quel champ ou quelle relation déclenchera le recalcul du champ calculé.
+
+
+#### Fonction inverse
+Les champs calculés sont généralement en lecture seule. Cependant, dans certains cas, 
+vous pouvez avoir besoin de modifier un champ calculé via une entrée utilisateur. 
+Par exemple, si vous avez un champ `total`, vous pourriez vouloir permettre 
+à l'utilisateur de modifier `amount` en fonction de la valeur de `total`. 
+C'est là qu'intervient la **fonction inverse**.
+
+
+Voici un exemple :
+
+
+```python
+from odoo import api, fields, models
+
+
+class TestComputed(models.Model):
+    _name = "test.computed"
+
+
+    total = fields.Float(compute="_compute_total", inverse="_inverse_total")
+    amount = fields.Float()
+
+
+    @api.depends("amount")
+    def _compute_total(self):
+        for record in self:
+            record.total = 2.0 * record.amount
+
+
+    def _inverse_total(self):
+        for record in self:
+            record.amount = record.total / 2.0
+```
+
+
+Dans cet exemple, la fonction `_inverse_total` est appelée lorsqu'un enregistrement est enregistré 
+(par exemple, lorsqu'un utilisateur modifie la valeur de `total`).
+
+
+#### Calcul de champs dans des relations (Many2one, One2many, Many2many)
+Les champs calculés peuvent également dépendre d'autres modèles. Par exemple, dans un modèle avec 
+un champ `Many2one`, vous pouvez calculer un champ basé sur une relation vers un autre modèle. 
+Cela se fait de la même manière que les dépendances locales, mais en utilisant des chemins à travers 
+les relations.
+
+
+### Onchanges
+Le décorateur **`onchange`** est utilisé pour mettre à jour la valeur d'un champ dans une vue 
+sans enregistrer ces changements dans la base de données. Cela permet de donner un retour en temps réel 
+à l'utilisateur dans l'interface sans affecter immédiatement les données. 
+Un cas d'utilisation classique pourrait être de mettre à jour un champ de surface lorsque l'utilisateur 
+entre une valeur dans un champ de type jardin (True/False).
+
+
+Voici un exemple d'utilisation du décorateur `onchange` :
+
+
+```python
+from odoo import api, fields, models
+
+
+class TestOnchange(models.Model):
+    _name = "test.onchange"
+
+
+    name = fields.Char(string="Name")
+    description = fields.Char(string="Description")
+    partner_id = fields.Many2one("res.partner", string="Partner")
+
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        self.name = "Document for %s" % (self.partner_id.name)
+        self.description = "Default description for %s" % (self.partner_id.name)
+```
+
+
+Ici, lorsqu'un utilisateur sélectionne un partenaire dans le champ `partner_id`, les champs `name` 
+et `description` sont automatiquement mis à jour pour refléter des valeurs basées sur ce partenaire.
+
+
+#### Utilisation d'`onchange` pour définir des valeurs par défaut
+Dans un modèle immobilier, vous pourriez vouloir définir des valeurs par défaut pour la surface du jardin
+ et l'orientation lorsque l'utilisateur active le jardin (True). Vous pourriez également vouloir 
+ réinitialiser ces champs lorsque le jardin est désactivé (False). Voici un exemple :
+
+
+```python
+from odoo import api, fields, models
+
+
+class EstateProperty(models.Model):
+    _name = "estate.property"
+
+
+    garden_area = fields.Float("Garden Area")
+    orientation = fields.Selection([('north', 'North'), ('south', 'South')], "Orientation")
+    has_garden = fields.Boolean("Has Garden")
+
+
+    @api.onchange("has_garden")
+    def _onchange_garden(self):
+        if self.has_garden:
+            self.garden_area = 10
+            self.orientation = 'north'
+        else:
+            self.garden_area = 0
+            self.orientation = False
+```
+
+
+Ici, l'activation du jardin fixe automatiquement la `garden_area` à 10 et l'`orientation` à "north", 
+tandis que la désactivation réinitialise ces champs.
+
+
+### Conseils d'utilisation
+- **Performance** : Faites attention aux performances lorsque vous utilisez des champs calculés, 
+surtout si vos champs dépendent d'autres champs calculés. Trop de calculs à chaque mise à jour peuvent 
+affecter les performances, surtout avec de grandes bases de données.
+- **`onchange` vs `compute`** : Préférez les **champs calculés** pour des valeurs dynamiques qui doivent 
+être mises à jour en dehors des vues de formulaire. Utilisez **`onchange`** pour des mises à jour 
+spécifiques aux vues de formulaire, notamment lorsqu'il s'agit d'ajuster des valeurs en fonction des 
+choix de l'utilisateur dans la même vue.
+
+
+En résumé, les **champs calculés** et **onchanges** permettent d'automatiser et d'améliorer l'expérience 
+utilisateur dans Odoo. Les champs calculés sont plus puissants et efficaces pour des calculs complexes, 
+tandis que **`onchange`** est pratique pour des ajustements d'interface en temps réel.
+---------------------------------------------------
+
+
+--------------------------------
+### Explication détaillée des fonctions `compute` et `onchange` en Odoo
+
+
+Dans Odoo, les **champs calculés** et **onchange** sont des mécanismes puissants permettant de gérer 
+les comportements des champs d'un modèle en fonction de la logique métier. Voici une explication 
+détaillée des deux concepts sans les exercices.
+
+
+---
+
+
+### 1. **Champs Calculés (`compute`)**
+
+
+#### Définition d'un Champ Calculé
+Un champ calculé dans Odoo permet de calculer la valeur d'un champ **à la volée**, c'est-à-dire 
+qu’il n’est pas stocké dans la base de données mais calculé chaque fois qu’on l'appelle ou qu’il est 
+requis. Cela permet de calculer des valeurs basées sur d'autres champs dans le modèle.
+
+
+#### Fonctionnement
+
+
+- **Déclaration** : Un champ calculé est défini avec l’attribut `compute` dans le modèle. Ce dernier 
+pointe vers une méthode qui effectue le calcul de ce champ.
+- **Dépendances** : Par défaut, un champ calculé est mis à jour chaque fois que l'un de ses champs 
+dépendants change. Pour préciser les champs dont dépend la valeur, on utilise 
+le décorateur `@api.depends`.
+
+
+#### Exemple :
+```python
+from odoo import api, fields, models
+
+
+class TestComputed(models.Model):
+    _name = "test.computed"
+
+
+    total = fields.Float(compute="_compute_total")  # Déclaration du champ calculé
+    amount = fields.Float()
+
+
+    @api.depends("amount")  # Indication que "total" dépend du champ "amount"
+    def _compute_total(self):
+        for record in self:
+            record.total = 2.0 * record.amount  # Calcul du total
+```
+
+
+##### Explication du code :
+- Le champ `total` est calculé en fonction du champ `amount` avec la méthode `_compute_total`.
+- **`@api.depends("amount")`** : Cela indique que le champ `total` doit être recalculé chaque fois 
+que `amount` change.
+- **`self`** : Il représente l'ensemble des enregistrements dans le modèle. Par exemple, 
+si nous avons plusieurs enregistrements, la méthode `_compute_total` sera exécutée pour chaque 
+enregistrement.
+
+
+#### Points Clés :
+- **Lecture seule** : Par défaut, un champ calculé est en lecture seule. Vous ne pouvez pas modifier 
+directement la valeur d’un champ calculé.
+- **Stockage** : Si vous souhaitez que la valeur calculée soit stockée dans la base de données, 
+vous pouvez ajouter `store=True`. Cependant, cela doit être utilisé avec précaution, car cela peut 
+ralentir le système si les calculs sont trop lourds.
+
+
+---
+
+
+### 2. **Fonction Inverse d'un Champ Calculé (`inverse`)**
+
+
+Odoo permet également de créer une fonction inverse pour un champ calculé, ce qui permet 
+à l'utilisateur de **modifier un champ calculé**. Si un champ calculé dépend d'autres champs, 
+il peut être nécessaire de permettre à l'utilisateur de modifier un de ces champs, ce qui ajusterait 
+automatiquement les autres champs calculés en conséquence.
+
+
+#### Exemple :
+```python
+from odoo import api, fields, models
+
+
+class TestComputed(models.Model):
+    _name = "test.computed"
+
+
+    total = fields.Float(compute="_compute_total", inverse="_inverse_total")
+    amount = fields.Float()
+
+
+    @api.depends("amount")
+    def _compute_total(self):
+        for record in self:
+            record.total = 2.0 * record.amount  # Calcul de total
+
+
+    def _inverse_total(self):
+        for record in self:
+            record.amount = record.total / 2.0  # Calcul inverse pour mettre à jour 'amount'
+```
+
+
+##### Explication :
+- La fonction `_compute_total` calcule `total` en fonction de `amount`.
+- La fonction `_inverse_total` permet à l'utilisateur de modifier `total` et ajuste automatiquement 
+`amount` en fonction de la valeur de `total`.
+
+
+#### Points Clés :
+- La méthode inverse est appelée lorsque l’utilisateur modifie le champ calculé, et elle permet 
+de mettre à jour les autres champs dépendants.
+- Cette méthode est exécutée lors de l'enregistrement des données (lorsque l’utilisateur sauvegarde 
+les modifications).
+
+
+---
+
+
+### 3. **Champs `onchange`**
+
+
+Les **méthodes `onchange`** sont utilisées pour mettre à jour certains champs d’un modèle sans effectuer 
+de sauvegarde dans la base de données immédiatement. Lorsqu’un champ spécifié change, 
+une logique supplémentaire peut être exécutée pour modifier d’autres champs en conséquence, 
+et l’interface utilisateur est mise à jour.
+
+
+#### Définition d’un `onchange`
+Lorsqu'un champ change, la méthode associée au décorateur `@api.onchange` est exécutée, 
+et les modifications sont répercutées sur l’interface utilisateur sans sauvegarde dans la base de données.
+
+
+#### Exemple :
+```python
+from odoo import api, fields, models
+
+
+class TestOnchange(models.Model):
+    _name = "test.onchange"
+
+
+    name = fields.Char(string="Name")
+    description = fields.Char(string="Description")
+    partner_id = fields.Many2one("res.partner", string="Partner")
+
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        self.name = "Document for %s" % (self.partner_id.name)
+        self.description = "Default description for %s" % (self.partner_id.name)
+```
+
+
+##### Explication :
+- **`@api.onchange("partner_id")`** : Cette méthode sera déclenchée chaque fois que la valeur 
+du champ `partner_id` est modifiée dans la vue.
+- La méthode met à jour les champs `name` et `description` en fonction de la valeur de `partner_id`.
+
+
+#### Points Clés :
+- **Pas de sauvegarde immédiate** : Contrairement aux champs calculés, `onchange` ne persiste 
+pas immédiatement dans la base de données. La mise à jour est uniquement visible dans la vue 
+du formulaire, tant que l'enregistrement n’est pas sauvegardé.
+- **Utilisation spécifique à la vue** : Les méthodes `onchange` ne sont déclenchées que dans une vue 
+de formulaire où l'utilisateur interagit avec l'interface.
+
+
+---
+
+
+### 4. **Quand Utiliser `compute` vs `onchange` ?**
+
+
+- **`compute`** : Utilisez-le lorsque la valeur d'un champ doit être calculée à la volée à partir 
+d'autres champs et que vous souhaitez qu’elle soit mise à jour automatiquement lorsque 
+les champs dépendants changent. **C’est le mécanisme préféré** pour les calculs qui dépendent
+de plusieurs autres champs.
+- **`onchange`** : Utilisez-le lorsque vous souhaitez exécuter une logique métier dans l’interface 
+utilisateur sans nécessiter de sauvegarde immédiate dans la base de données. Il est utilisé 
+principalement pour simplifier la saisie des données, comme remplir automatiquement des champs 
+lorsque l'utilisateur en saisit un autre.
+
+
+### Conclusion
+
+
+- Les **champs calculés** sont utiles lorsque vous avez des champs dont la valeur dépend 
+d'autres champs et que vous souhaitez effectuer des calculs automatiquement.
+- Les **méthodes `onchange`** permettent de mettre à jour des champs dans la vue sans enregistrer 
+les changements dans la base de données immédiatement. Elles sont principalement utilisées 
+pour aider l'utilisateur à remplir un formulaire en fournissant des valeurs par défaut ou en réagissant 
+à des changements dans d'autres champs.
+
+

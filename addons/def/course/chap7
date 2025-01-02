@@ -1,0 +1,137 @@
+Le chapitre 7 introduit des concepts importants concernant les relations entre modèles dans Odoo, en particulier les relations de type *Many2one*, *Many2many*, et *One2many*. Ces relations permettent de lier différents modèles entre eux et de structurer les données de manière cohérente et efficace.
+
+### Objectifs principaux du chapitre 7
+
+1. **Relations Many2one** :
+   - Un modèle `estate.property.type` est créé pour catégoriser les types de propriétés (ex. maison, appartement). 
+   - Ce modèle est lié au modèle `estate.property` via un champ `Many2one` appelé `property_type_id`. Chaque propriété peut être associée à un type spécifique.
+   
+2. **Relations Many2many** :
+   - Les **tags** (ex. cosy, rénové) sont associés aux propriétés à travers une relation `Many2many` via le modèle `estate.property.tag`.
+   - Un bien immobilier peut avoir plusieurs tags, et un tag peut être attribué à plusieurs propriétés.
+   
+3. **Relations One2many** :
+   - Les **offres immobilières** sont liées aux propriétés via une relation `One2many`. Un bien immobilier peut recevoir plusieurs offres de la part d'acheteurs potentiels.
+   - Les offres sont définies dans un modèle `estate.property.offer` avec des champs comme `price`, `status` et `partner_id`, et la relation avec la propriété est indiquée par `property_id`.
+
+### Exercice 1 : Ajouter le modèle de type de propriété
+
+- Créez le modèle `estate.property.type` et ajoutez un champ `name` avec l'attribut `required`.
+- Créez un menu et une vue pour ce modèle dans l'interface Odoo.
+- Ajoutez un champ `property_type_id` dans le modèle `estate.property` avec une relation `Many2one` vers `estate.property.type`, et incluez-le dans les vues de formulaire et de liste.
+
+### Exercice 2 : Ajouter l'acheteur et le vendeur
+
+- Le vendeur doit être un utilisateur interne (modèle `res.users`), et l'acheteur peut être n'importe quel contact (modèle `res.partner`).
+- Ajoutez les champs correspondants dans le modèle `estate.property`.
+- Définissez la valeur par défaut du vendeur comme l'utilisateur actuel (`self.env.user`).
+
+### Exercice 3 : Ajouter des tags de propriété
+
+- Créez un modèle `estate.property.tag` avec un champ `name`.
+- Ajoutez une relation `Many2many` entre `estate.property` et `estate.property.tag` via un champ `tag_ids`.
+- Ajoutez le widget `many2many_tags` dans la vue formulaire pour faciliter l'ajout de tags aux propriétés.
+
+### Exercice 4 : Ajouter des offres immobilières
+
+- Créez un modèle `estate.property.offer` avec des champs comme `price`, `status`, et `partner_id`.
+- Ajoutez une relation `One2many` dans le modèle `estate.property` pour lier les offres à la propriété via un champ `offer_ids`.
+- La relation `One2many` est rendue possible par le champ `Many2one` dans le modèle `estate.property.offer`, indiquant à quelle propriété chaque offre est liée.
+
+### Points importants
+
+- **Les relations `Many2one`** permettent de relier un modèle à un autre avec une clé étrangère, et sont couramment utilisées pour des liens simples comme un "propriétaire" ou un "type" d'objet.
+- **Les relations `Many2many`** permettent de relier un modèle à plusieurs enregistrements d'un autre modèle. Elles sont utiles pour des cas où plusieurs éléments peuvent être associés à plusieurs autres éléments (ex. tags pour les propriétés).
+- **Les relations `One2many`** sont l'inverse des `Many2one` et permettent de lister plusieurs enregistrements d'un modèle lié à un enregistrement d'un autre modèle (ex. plusieurs offres pour une propriété).
+
+### Conclusion
+
+Ce chapitre est crucial pour bien comprendre les relations entre modèles dans Odoo et comment organiser les données efficacement. La mise en pratique des concepts de relations permet de construire des applications modulaires et interconnectées dans le cadre de l'ERP Odoo.
+
+-------------------------------
+Le chapitre 7 se concentre sur les **relations entre modèles** dans Odoo, un aspect fondamental du développement dans ce système. Il traite principalement de trois types de relations : *Many2one*, *One2many*, et *Many2many*, qui permettent d'associer des enregistrements de modèles différents. Ces relations facilitent l'organisation et la gestion des données dans des cas d'utilisation complexes, comme un système immobilier.
+
+### Relations Many2one
+
+Une relation *Many2one* est une relation où plusieurs enregistrements d'un modèle peuvent être liés à un seul enregistrement d'un autre modèle. C'est une sorte de *clé étrangère* dans une base de données traditionnelle.
+
+**Exemple :**  
+Dans un modèle immobilier, chaque propriété (maison, appartement, etc.) peut être associée à un **type de propriété** (maison, appartement, penthouse). Un type de propriété peut être attribué à plusieurs biens immobiliers, mais chaque bien immobilier ne peut avoir qu'un seul type.
+
+- Dans ce cas, un bien immobilier (`estate.property`) peut avoir un champ `property_type_id`, qui fait référence à un enregistrement dans le modèle `estate.property.type` (type de propriété). Ce champ est un *Many2one*, car plusieurs propriétés peuvent être de type "maison", mais une propriété ne peut être qu'un seul type.
+
+**Syntaxe dans Odoo :**
+
+```python
+property_type_id = fields.Many2one('estate.property.type', string="Property Type")
+```
+
+Cela signifie que chaque propriété a un seul type, mais le même type peut être utilisé par plusieurs propriétés.
+
+### Relations One2many
+
+La relation *One2many* est l'inverse de la relation *Many2one*. Elle est utilisée pour établir une relation où un enregistrement dans un modèle est lié à plusieurs enregistrements d'un autre modèle.
+
+**Exemple :**  
+Une propriété peut recevoir plusieurs offres d'achat. Chaque offre est liée à une propriété spécifique, mais une propriété peut avoir plusieurs offres.
+
+- Pour cela, nous utilisons un champ `One2many` dans le modèle `estate.property`. Ce champ indique qu'une propriété peut avoir plusieurs offres associées.
+
+**Syntaxe dans Odoo :**
+
+```python
+offer_ids = fields.One2many('estate.property.offer', 'property_id', string="Offers")
+```
+
+Dans ce cas :
+- `estate.property.offer` est le modèle des offres immobilières.
+- `property_id` est le champ dans le modèle `estate.property.offer` qui fait référence à la propriété.
+- `offer_ids` dans le modèle `estate.property` contient toutes les offres associées à une propriété spécifique.
+
+**Fonctionnement :**
+- Chaque enregistrement dans `estate.property.offer` aura une clé étrangère `property_id` qui pointe vers l'enregistrement dans `estate.property` auquel l'offre est liée.
+- Dans la vue formulaire d'une propriété, Odoo affichera toutes les offres associées à cette propriété grâce à la relation *One2many*.
+
+### Relations Many2many
+
+La relation *Many2many* est utilisée lorsque plusieurs enregistrements d'un modèle peuvent être associés à plusieurs enregistrements d'un autre modèle. Cela signifie qu'un enregistrement dans un modèle peut avoir plusieurs liens vers des enregistrements dans un autre modèle, et vice versa.
+
+**Exemple :**  
+Dans un système immobilier, chaque propriété peut avoir plusieurs **tags** (par exemple, "cosy", "rénovée", etc.), et un tag peut être utilisé pour plusieurs propriétés. C'est une relation *Many2many*.
+
+- Dans ce cas, nous créons un modèle `estate.property.tag` qui représente les tags des propriétés.
+- Ensuite, nous établissons une relation *Many2many* entre `estate.property` et `estate.property.tag`.
+
+**Syntaxe dans Odoo :**
+
+```python
+tag_ids = fields.Many2many('estate.property.tag', string="Tags")
+```
+
+Cela signifie que chaque propriété peut être associée à plusieurs tags, et chaque tag peut être associé à plusieurs propriétés.
+
+**Fonctionnement :**
+- Odoo gère automatiquement la création d'une table de liaison entre les deux modèles pour gérer les relations *Many2many*.
+- Dans la vue de formulaire d'une propriété, un champ sera ajouté pour permettre à l'utilisateur de sélectionner plusieurs tags pour cette propriété.
+
+### Comparaison entre Many2one, One2many et Many2many
+
+1. **Many2one** : 
+   - Un enregistrement d'un modèle peut être lié à un seul enregistrement d'un autre modèle.
+   - Exemple : chaque propriété a un type (relie `estate.property` à `estate.property.type`).
+
+2. **One2many** : 
+   - Un enregistrement d'un modèle peut être lié à plusieurs enregistrements d'un autre modèle.
+   - Exemple : une propriété peut recevoir plusieurs offres (relie `estate.property` à `estate.property.offer`).
+
+3. **Many2many** : 
+   - Plusieurs enregistrements d'un modèle peuvent être liés à plusieurs enregistrements d'un autre modèle.
+   - Exemple : une propriété peut avoir plusieurs tags, et un tag peut être associé à plusieurs propriétés (relie `estate.property` à `estate.property.tag`).
+
+### Points clés à retenir
+
+- **Many2one** : Un lien vers un autre modèle, mais un seul enregistrement lié.
+- **One2many** : Plusieurs enregistrements liés à un enregistrement d'un autre modèle.
+- **Many2many** : Un lien bidirectionnel où plusieurs enregistrements peuvent être liés à plusieurs autres enregistrements.
+
+Ces relations permettent de structurer les données de manière cohérente dans Odoo, et de gérer efficacement des modèles avec des relations complexes entre eux. Ce chapitre montre comment ces relations peuvent être utilisées pour modéliser des cas d'utilisation courants dans un module immobilier.

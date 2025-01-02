@@ -1,0 +1,95 @@
+Le code XML que vous avez partagé est destiné à gérer les types de propriétés dans Odoo. Il crée des vues pour les types de propriétés (comme "Appartement", "Maison", etc.), ainsi que des actions pour les afficher et les manipuler.
+
+### Explication détaillée du code :
+
+#### 1. **Vue de recherche pour les types de propriétés (`view_estate_property_type_search`)**
+```xml
+<record id="view_estate_property_type_search" model="ir.ui.view">
+    <field name="name">estate.property.search</field>
+    <field name="model">estate.property.type</field>
+    <field name="arch" type="xml">
+        <search string="Types">
+            <field name="name"/>
+        </search>
+    </field>
+</record>
+```
+- **But** : Cette vue permet de rechercher les types de propriétés en fonction de leur nom (`name`).
+- La vue est définie pour le modèle `estate.property.type`, et le champ visible dans la recherche est `name`.
+
+#### 2. **Action d'ouverture pour les types de propriétés (`estate_property_type_action`)**
+```xml
+<record id="estate_property_type_action" model="ir.actions.act_window">
+    <field name="name">Property Types</field>
+    <field name="search_view_id" ref="view_estate_property_type_search"/>
+    <field name="res_model">estate.property.type</field>
+    <field name="view_mode">tree,form</field>
+</record>
+```
+- **But** : Créer une action qui ouvre la fenêtre pour afficher les types de propriétés. Cette action permet de voir les types en **mode arbre** et **mode formulaire**.
+- **Champ `search_view_id`** : Référence à la vue de recherche précédemment définie (`view_estate_property_type_search`).
+
+#### 3. **Vue en arbre des types de propriétés (`estate_property_type_view_tree`)**
+```xml
+<record id="estate_property_type_view_tree" model="ir.ui.view">
+    <field name="name">estate.property.type.tree</field>
+    <field name="model">estate.property.type</field>
+    <field name="arch" type="xml">
+        <tree string="Channel">
+            <field name="name" />
+        </tree>
+    </field>
+</record>
+```
+- **But** : Cette vue affiche les types de propriétés sous forme de tableau (vue en arbre). Elle contient une colonne `name` pour afficher le nom du type de propriété.
+
+#### 4. **Vue de formulaire pour les types de propriétés (`estate_property_type_view_form`)**
+```xml
+<record id="estate_property_type_view_form" model="ir.ui.view">
+    <field name="name">estate_property_type_view_form</field>
+    <field name="model">estate.property.type</field>
+    <field name="arch" type="xml">
+        <form string="Estate Property Type">
+            <sheet>
+                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                <div class="oe_title">
+                    <label for="name" string="Type Name"/>
+                    <h1 class="mb32">
+                        <field name="name" class="o_text_overflow"/>
+                    </h1>
+                    <field name="active" invisible="1"/>
+                </div>
+                <notebook>
+                    <page string="Properties">
+                        <group>
+                            <field name="property_ids" nolabel="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="expected_price"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+```
+- **But** : Cette vue permet de visualiser et de modifier un type de propriété spécifique. Elle affiche le champ `name` pour le nom du type de propriété.
+- **Widget `web_ribbon`** : Un widget est utilisé pour afficher un bandeau intitulé "Archived" lorsque l'attribut `active` est `False`. Ce bandeau est caché lorsque le type de propriété est actif.
+- **Notebok** : La vue contient un onglet `Properties` qui liste toutes les propriétés associées à ce type dans une vue en arbre. Les propriétés affichées sont liées par `property_ids` au modèle `estate.property`. Dans cette liste, les champs visibles sont `name`, `expected_price`, et `state`.
+
+### Récapitulatif des actions :
+1. **`view_estate_property_type_search`** : Vue de recherche pour les types de propriétés, permettant de filtrer par nom.
+2. **`estate_property_type_action`** : Action d'ouverture pour afficher les types en mode arbre et formulaire.
+3. **`estate_property_type_view_tree`** : Vue en arbre des types de propriétés.
+4. **`estate_property_type_view_form`** : Vue de formulaire pour visualiser et modifier un type spécifique, avec un onglet listant les propriétés associées à ce type.
+
+### Remarques :
+- Le widget `web_ribbon` sert à indiquer visuellement si un type de propriété est archivé ou non, en utilisant la couleur rouge (`bg-danger`).
+- La vue de formulaire permet de gérer les types de propriétés ainsi que de voir les propriétés qui leur sont associées grâce à l'onglet "Properties".
+- Le champ `active` permet de gérer l'archivage des types de propriétés.
+
+Si vous avez des questions supplémentaires ou des modifications à apporter, n'hésitez pas à demander.

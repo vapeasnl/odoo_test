@@ -1,0 +1,52 @@
+Dans ce chapitre, l'objectif est d'ajouter un mécanisme de sécurité pour limiter l'accès aux données dans le module immobilier que vous avez créé. Voici les étapes principales à suivre pour ajouter la sécurité et gérer les droits d'accès dans Odoo :
+
+### 1. **Ajouter des droits d'accès au modèle**
+   Odoo exige que des règles de sécurité soient définies pour chaque modèle afin de déterminer qui peut interagir avec les données (lecture, écriture, création, suppression). Si ces règles ne sont pas définies, Odoo génère un avertissement indiquant qu'aucun droit d'accès n'a été attribué.
+
+   Pour ajouter des droits d'accès pour le modèle `estate.property`, il faut créer un fichier `ir.model.access.csv` dans le répertoire `security` de votre module. Ce fichier définira les permissions des groupes d'utilisateurs.
+
+### 2. **Structure du fichier CSV**
+   Voici un exemple d'enregistrement dans le fichier `ir.model.access.csv` qui donne des droits d'accès aux utilisateurs du groupe `base.group_user` pour le modèle `estate.property` :
+
+   ```csv
+   id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+   access_estate_property,access_estate_property,model_estate_property,base.group_user,1,1,1,1
+   ```
+
+   - **id** : Un identifiant unique pour chaque règle.
+   - **name** : Le nom de la règle d'accès.
+   - **model_id/id** : L'ID du modèle auquel s'applique la règle d'accès. Ici, c'est `model_estate_property` pour le modèle `estate.property`.
+   - **group_id/id** : Le groupe d'utilisateurs auquel s'applique la règle. Ici, le groupe `base.group_user` (utilisateurs de base).
+   - **perm_read, perm_write, perm_create, perm_unlink** : Ces colonnes définissent les permissions de lecture (1 ou 0), écriture, création et suppression (unlink). Si vous définissez toutes ces valeurs à `1`, cela signifie que le groupe a tous les droits sur le modèle.
+
+### 3. **Ajout du fichier dans `__manifest__.py`**
+   Une fois que vous avez créé le fichier `ir.model.access.csv`, vous devez le déclarer dans le fichier `__manifest__.py` de votre module afin qu'Odoo le prenne en compte lors de l'installation ou de la mise à jour du module.
+
+   Exemple de déclaration dans `__manifest__.py` :
+   ```python
+   {
+       'name': 'Estate Module',
+       'version': '1.0',
+       'depends': ['base'],
+       'data': [
+           'security/ir.model.access.csv',
+           'views/estate_property_view.xml',
+       ],
+       'installable': True,
+   }
+   ```
+
+### 4. **Redémarrer le serveur Odoo**
+   Après avoir créé ou mis à jour le fichier `ir.model.access.csv`, vous devez redémarrer le serveur Odoo avec la commande suivante pour que les changements prennent effet :
+
+   ```bash
+   ./odoo-bin --addons-path=addons,../enterprise/,../tutorials/ -d rd-demo -u estate
+   ```
+
+   Cette commande applique la mise à jour de votre module `estate`, et le fichier CSV contenant les droits d'accès sera pris en compte. Après redémarrage, vous ne devriez plus voir l'avertissement concernant l'absence de règles d'accès pour le modèle `estate.property`.
+
+### 5. **Vérification**
+   Une fois le serveur redémarré, vérifiez dans le journal de l'application qu'il n'y a plus d'avertissements concernant les droits d'accès. De plus, vous pouvez tester l'accès aux données via l'interface utilisateur pour vous assurer que les règles sont correctement appliquées aux utilisateurs du groupe `base.group_user`.
+
+### Conclusion
+   En suivant ces étapes, vous ajoutez une couche de sécurité à votre module immobilier en définissant des droits d'accès aux données métier. Cela permet de contrôler qui peut voir, modifier, ajouter ou supprimer des propriétés dans l'application Odoo.

@@ -1,0 +1,56 @@
+Ce modèle `EstatePropertyTag` dans Odoo représente des étiquettes (tags) associées aux propriétés immobilières. Voici une explication détaillée de chaque partie du code :
+
+### 1. Définition du modèle :
+```python
+class EstatePropertyTag(models.Model):
+    _name = "estate.property.tag"
+    _description = "Realestate Property Tags"
+    _order = "name asc"
+```
+- **_name** : Définition du nom du modèle, ici `estate.property.tag`, utilisé pour référencer ce modèle dans la base de données.
+- **_description** : Donne une description du modèle, ici il s'agit des "tags" pour les propriétés immobilières.
+- **_order** : Définit l'ordre des enregistrements retournés par défaut. Ici, les tags sont triés par nom de manière croissante (`asc` pour ascending).
+
+### 2. Champs (fields) du modèle :
+Les champs sont utilisés pour stocker les informations de chaque tag.
+
+#### a. `name` (Char)
+```python
+name = fields.Char('Property Tags', required=True)
+```
+- Ce champ enregistre le nom du tag. Il est obligatoire.
+
+#### b. `color` (Integer)
+```python
+color = fields.Integer('Tag Color')
+```
+- Ce champ permet de définir une couleur pour le tag, stockée sous forme d'entier (généralement un code de couleur ou une valeur numérique correspondant à une couleur).
+
+#### c. `active` (Boolean)
+```python
+active = fields.Boolean('Active', default=True)
+```
+- Ce champ détermine si le tag est actif ou non. Par défaut, il est défini sur `True`, signifiant que le tag est actif.
+
+### 3. Contraintes SQL :
+```python
+_sql_constraints = [
+    ('unique_tags', 'unique(name)', "Tag already exists.")
+]
+```
+- **unique_tags** : Cette contrainte garantit que chaque tag doit avoir un nom unique. Si un utilisateur tente de créer un tag avec un nom déjà existant, Odoo renverra un message d'erreur : `"Tag already exists."`
+
+### Utilisation du modèle :
+- Ce modèle permet de gérer les tags associés aux propriétés immobilières. Chaque tag peut être utilisé pour classer ou filtrer les propriétés, et il peut aussi être lié à des propriétés spécifiques via un champ `Many2many` dans le modèle `EstateProperty`.
+
+### Exemple d'utilisation dans un autre modèle (comme `EstateProperty`) :
+Dans le modèle `EstateProperty` que vous avez précédemment partagé, le champ `tag_ids` permet d'associer plusieurs tags à chaque propriété :
+
+```python
+tag_ids = fields.Many2many("estate.property.tag", string="Tags")
+```
+Cela signifie qu'une propriété peut être associée à plusieurs tags de type `EstatePropertyTag`.
+
+---
+
+Ce modèle `EstatePropertyTag` est simple mais puissant pour ajouter une gestion de classification dynamique à vos propriétés immobilières dans Odoo. Si vous avez des questions supplémentaires ou souhaitez étendre ce modèle, n'hésitez pas à demander !

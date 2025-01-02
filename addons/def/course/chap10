@@ -1,0 +1,122 @@
+Le chapitre 10 se concentre sur l'ajout de **contraintes** dans Odoo pour garantir la cohérence et l'intégrité des données. Vous apprendrez comment empêcher les utilisateurs de saisir des données incorrectes en utilisant des contraintes SQL et Python. Voici un résumé détaillé des concepts et des exercices pour ce chapitre.
+
+### Objectifs
+
+1. **Les montants doivent être strictement positifs** : Cela inclut des vérifications pour le prix de vente, le prix attendu, et le prix d'offre.
+2. **Les noms des balises de propriété et des types de propriétés doivent être uniques** : Cela empêche d'avoir plusieurs éléments avec le même nom, ce qui pourrait entraîner des incohérences.
+3. **Le prix de vente ne peut pas être inférieur à 90% du prix attendu** : Une contrainte qui vérifie que le prix de vente respecte une certaine logique en fonction du prix attendu.
+
+### Contrainte SQL
+
+Les contraintes SQL sont des règles directement appliquées au niveau de la base de données. Elles sont généralement plus efficaces pour garantir l'intégrité des données, mais elles sont moins flexibles que les contraintes Python, car elles sont limitées à des conditions simples.
+
+#### 1. **Contrainte sur les montants** : 
+Les montants (prix attendu, prix de vente, et prix d'offre) doivent être strictement positifs. Vous pouvez ajouter ces contraintes dans votre modèle en utilisant l'attribut `_sql_constraints` comme suit :
+  
+```python
+class EstateProperty(models.Model):
+    _name = "estate.property"
+
+    price_expected = fields.Float()
+    price_sold = fields.Float()
+    offer_price = fields.Float()
+
+    _sql_constraints = [
+        ('check_price_expected', 'CHECK(price_expected > 0)', 'Le prix attendu doit être strictement positif'),
+        ('check_price_sold', 'CHECK(price_sold > 0)', 'Le prix de vente doit être positif'),
+        ('check_offer_price', 'CHECK(offer_price > 0)', 'Le prix de l\'offre doit être strictement positif'),
+    ]
+```
+
+- **`_sql_constraints`** : Cette variable contient une liste de tuples définissant les contraintes SQL. Chaque tuple se compose de :
+  - Un **nom** de contrainte unique (par exemple, `check_price_expected`).
+  - Une **définition SQL** sous forme de chaîne de caractères (par exemple, `CHECK(price_expected > 0)`).
+  - Un **message d'erreur** personnalisé (par exemple, `'Le prix attendu doit être strictement positif'`).
+
+#### 2. **Contrainte sur l'unicité des noms** :
+Pour garantir que le nom d'un type de propriété et d'une balise de propriété soit unique, vous pouvez utiliser l'attribut `unique=True` dans la définition des champs `name`.
+
+```python
+class EstatePropertyTag(models.Model):
+    _name = "estate.property.tag"
+    
+    name = fields.Char(string="Nom", unique=True)
+
+class EstatePropertyType(models.Model):
+    _name = "estate.property.type"
+
+    name = fields.Char(string="Nom", unique=True)
+```
+
+- **`unique=True`** garantit qu'aucun doublon ne sera autorisé pour les champs `name` dans les tables correspondantes.
+
+#### Problèmes possibles avec les contraintes SQL
+Si vous avez des données existantes qui violent ces contraintes (par exemple, un prix nul ou un nom de balise dupliqué), vous recevrez une erreur comme celle-ci :
+
+```
+ERROR rd-demo odoo.schema: Table 'estate_property_offer': unable to add constraint 'estate_property_offer_check_price' as CHECK(price > 0)
+```
+
+Vous devrez peut-être **supprimer ou mettre à jour les données problématiques** avant de pouvoir appliquer les contraintes.
+
+### Contrainte Python
+
+Les contraintes Python permettent des vérifications plus complexes qui ne peuvent pas être exprimées facilement en SQL. Par exemple, vous pouvez vérifier que le prix de vente ne soit pas inférieur à 90% du prix attendu.
+
+#### 1. **Contrainte Python sur le prix de vente**
+Voici comment définir une contrainte Python pour vérifier que le prix de vente n'est pas inférieur à 90% du prix attendu :
+
+```python
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+
+class EstateProperty(models.Model):
+    _name = "estate.property"
+
+    price_expected = fields.Float()
+    price_sold = fields.Float()
+
+    @api.constrains('price_sold', 'price_expected')
+    def _check_price_sold(self):
+        for record in self:
+            if record.price_sold and record.price_expected:
+                if record.price_sold < (record.price_expected * 0.9):
+                    raise ValidationError("Le prix de vente ne peut pas être inférieur à 90% du prix attendu.")
+```
+
+- **`@api.constrains('price_sold', 'price_expected')`** : Ce décorateur lie la méthode `_check_price_sold` aux champs `price_sold` et `price_expected`. La méthode sera appelée automatiquement chaque fois que l'un de ces champs est modifié.
+- **`ValidationError`** : Si la condition de la contrainte n'est pas respectée (le prix de vente est inférieur à 90% du prix attendu), cette exception est levée, et un message d'erreur est affiché à l'utilisateur.
+
+#### 2. **Utilisation des fonctions `float_compare` et `float_is_zero`**
+Lorsque vous travaillez avec des nombres à virgule flottante, il est important de **ne pas comparer directement les flottants** à cause des problèmes d'arrondi. Odoo fournit les fonctions `float_compare` et `float_is_zero` pour effectuer des comparaisons précises. Voici un exemple d'utilisation de `float_compare` :
+
+```python
+from odoo.tools import float_compare
+
+class EstateProperty(models.Model):
+    _name = "estate.property"
+
+    price_expected = fields.Float()
+    price_sold = fields.Float()
+
+    @api.constrains('price_sold', 'price_expected')
+    def _check_price_sold(self):
+        for record in self:
+            if record.price_sold and record.price_expected:
+                if float_compare(record.price_sold, record.price_expected * 0.9, precision_digits=2) < 0:
+                    raise ValidationError("Le prix de vente ne peut pas être inférieur à 90% du prix attendu.")
+```
+
+- **`float_compare`** : Cette fonction compare deux valeurs flottantes avec une précision spécifiée (ici, 2 chiffres après la virgule) et renvoie un résultat qui indique si le premier nombre est plus petit, égal ou plus grand que le second.
+
+---
+
+### Conclusion
+
+À la fin de cette section, vous serez capable de :
+
+1. **Ajouter des contraintes SQL** pour garantir que certaines données respectent des règles d'intégrité de base, telles que les montants positifs et l'unicité des noms.
+2. **Définir des contraintes Python** pour effectuer des vérifications plus complexes, comme vérifier que le prix de vente est toujours supérieur à 90% du prix attendu.
+3. **Utiliser les bonnes pratiques** pour éviter les problèmes de comparaison avec les nombres flottants.
+
+Les contraintes SQL sont plus performantes, mais les contraintes Python sont plus flexibles. Vous devez choisir l'outil qui correspond le mieux à votre besoin. Dans tous les cas, ces contraintes assurent la cohérence des données et préviennent les erreurs des utilisateurs.

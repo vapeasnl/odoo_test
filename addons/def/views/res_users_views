@@ -1,0 +1,38 @@
+Le code XML que vous avez partagé sert à **étendre la vue de formulaire des utilisateurs (`res.users`)** dans Odoo afin d'ajouter une nouvelle section **"Properties"** dans les préférences de l'utilisateur. Voici une explication détaillée de ce que fait chaque partie du code :
+
+### Explication du code
+
+1. **Enregistrement de la vue héritée (`res_users_view_form`)**
+   ```xml
+   <record id="res_users_view_form" model="ir.ui.view">
+       <field name="name">res.users.view.form.inherit.estate</field>
+       <field name="model">res.users</field>
+       <field name="inherit_id" ref="base.view_users_form"/>
+   ```
+   - **`id="res_users_view_form"`** : Identifie de manière unique cette vue modifiée.
+   - **`model="ir.ui.view"`** : Cela indique que le modèle est une vue utilisateur.
+   - **`name="res.users.view.form.inherit.estate"`** : Le nom de la vue, spécifiant qu'il s'agit d'une vue héritée pour le modèle `res.users` (les utilisateurs).
+   - **`inherit_id`** : Cette ligne fait référence à la vue de base des utilisateurs (`base.view_users_form`). Cela signifie que vous héritez de cette vue pour la modifier plutôt que de la recréer à partir de zéro.
+
+2. **Ajout d'une nouvelle page "Properties"**
+   ```xml
+   <field name="arch" type="xml">
+       <xpath expr="//page[@name='preferences']" position="after">
+           <page string="Properties">
+               <group>
+                   <field name="property_ids" nolabel="1" />
+               </group>
+           </page>
+       </xpath>
+   </field>
+   ```
+   - **`<xpath expr="//page[@name='preferences']" position="after">`** : L'élément `<xpath>` permet de localiser un emplacement spécifique dans la vue héritée. Ici, il recherche la page nommée `preferences` et ajoute une nouvelle section juste après celle-ci.
+   - **Ajout de la page "Properties"** : La page **"Properties"** est ajoutée avec un champ `property_ids` qui est probablement une relation **many2many** pointant vers les propriétés de l'utilisateur. Ce champ est affiché sans label grâce à l'attribut `nolabel="1"`.
+
+### Résumé
+Ce code permet d'ajouter un onglet supplémentaire dans la section des préférences de la vue de formulaire des utilisateurs d'Odoo. Cet onglet contient une liste des propriétés liées à l'utilisateur. 
+
+- La page "Properties" s'affiche après les préférences dans le formulaire utilisateur.
+- Le champ `property_ids` est utilisé pour afficher les propriétés associées à cet utilisateur (en supposant que le champ `property_ids` est bien défini dans le modèle `res.users`).
+
+Cela permet à l'utilisateur de consulter ses propriétés directement à partir de son propre formulaire dans Odoo.

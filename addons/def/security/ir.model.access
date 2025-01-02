@@ -1,0 +1,53 @@
+Les lignes que vous avez partagées semblent être un extrait d'un fichier **CSV** ou **XML** utilisé pour définir des règles d'accès dans Odoo. Ces règles spécifient les permissions pour différents modèles (tables de données) dans le système Odoo, en lien avec les groupes d'utilisateurs.
+
+Voici une explication détaillée de chaque champ dans les lignes que vous avez partagées :
+
+### Structure des colonnes :
+1. **`id`** : Identifiant unique de la règle d'accès.
+2. **`name`** : Nom de la règle d'accès. Cela doit être unique pour chaque règle.
+3. **`model_id/id`** : Identifiant du modèle auquel cette règle d'accès s'applique. Le modèle est lié à une table dans la base de données.
+4. **`group_id/id`** : Identifiant du groupe d'utilisateurs pour lequel cette règle d'accès s'applique. Par exemple, `base.group_user` fait référence au groupe d'utilisateurs par défaut dans Odoo.
+5. **`perm_read`** : Permission de lecture. Cette valeur (1 ou 0) détermine si l'utilisateur peut lire (consulter) les enregistrements de ce modèle.
+6. **`perm_write`** : Permission d'écriture. Cette valeur (1 ou 0) détermine si l'utilisateur peut modifier les enregistrements de ce modèle.
+7. **`perm_create`** : Permission de création. Cette valeur (1 ou 0) détermine si l'utilisateur peut créer de nouveaux enregistrements pour ce modèle.
+8. **`perm_unlink`** : Permission de suppression. Cette valeur (1 ou 0) détermine si l'utilisateur peut supprimer des enregistrements pour ce modèle.
+
+### Détail des lignes :
+
+1. **Règle d'accès pour le modèle `estate.property` (Propriétés Immobilières) :**
+   ```csv
+   access_estate_property,access_estate_property,model_estate_property,base.group_user,1,1,1,1
+   ```
+   - **`model_estate_property`** : La règle s'applique au modèle `estate.property` (Propriétés).
+   - **`base.group_user`** : La règle d'accès concerne les utilisateurs du groupe par défaut (`group_user`).
+   - **`1, 1, 1, 1`** : L'utilisateur peut lire, écrire, créer et supprimer des enregistrements dans ce modèle.
+
+2. **Règle d'accès pour le modèle `estate.property.type` (Types de Propriétés) :**
+   ```csv
+   access_estate_property_type,access_estate_property_type,model_estate_property_type,base.group_user,1,1,1,1
+   ```
+   - **`model_estate_property_type`** : La règle s'applique au modèle `estate.property.type` (Types de propriétés).
+   - **`base.group_user`** : Cette règle est applicable aux utilisateurs du groupe par défaut.
+   - **`1, 1, 1, 1`** : L'utilisateur peut lire, écrire, créer et supprimer des types de propriétés.
+
+3. **Règle d'accès pour le modèle `estate.property.tag` (Tags de Propriétés) :**
+   ```csv
+   access_estate_property_tag,access_estate_property_tag,model_estate_property_tag,base.group_user,1,1,1,1
+   ```
+   - **`model_estate_property_tag`** : La règle s'applique au modèle `estate.property.tag` (Tags des propriétés).
+   - **`base.group_user`** : Elle s'applique au groupe d'utilisateurs par défaut.
+   - **`1, 1, 1, 1`** : L'utilisateur peut lire, écrire, créer et supprimer des tags pour les propriétés.
+
+4. **Règle d'accès pour le modèle `estate.property.offer` (Offres sur Propriétés) :**
+   ```csv
+   access_estate_property_offer,access_estate_property_offer,model_estate_property_offer,base.group_user,1,1,1,1
+   ```
+   - **`model_estate_property_offer`** : La règle s'applique au modèle `estate.property.offer` (Offres sur les propriétés).
+   - **`base.group_user`** : La règle d'accès est destinée aux utilisateurs du groupe par défaut.
+   - **`1, 1, 1, 1`** : Les utilisateurs peuvent lire, écrire, créer et supprimer des offres sur les propriétés.
+
+### Conclusion :
+
+Ces lignes définissent des règles d'accès pour différents modèles dans un module immobilier (`estate`) d'Odoo. Elles permettent aux utilisateurs du groupe par défaut (par exemple, les utilisateurs connectés) d'avoir des permissions complètes (lecture, écriture, création, suppression) sur plusieurs modèles : **propriétés**, **types de propriétés**, **tags de propriétés** et **offres sur les propriétés**.
+
+Ces règles sont généralement définies dans des fichiers de données (comme des fichiers CSV ou XML) et sont appliquées pour gérer les autorisations d'accès au niveau des modèles dans l'application Odoo.

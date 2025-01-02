@@ -1,0 +1,37 @@
+Le chapitre 15 aborde les dernières étapes de la création d'un module Odoo, avec un focus sur l'amélioration du code en respectant les **directives de codage** d'Odoo et l'utilisation de **Runbot** pour tester et vérifier les changements effectués. Voici les points clés à comprendre :
+
+### 1. **Directives de codage Odoo**
+Les directives de codage d'Odoo sont des bonnes pratiques établies pour garantir la qualité, la lisibilité et la maintenabilité du code dans le développement des modules Odoo. Respecter ces directives permet également d'assurer une certaine cohérence entre les modules et facilite la collaboration au sein de l'équipe de développement.
+
+Quelques-unes des principales directives de codage d'Odoo incluent :
+- **Structure du module** : Chaque module Odoo doit respecter une structure spécifique (avec des dossiers comme `models`, `views`, `controllers`, etc.) afin que le code soit facilement compréhensible et évolutif.
+- **Nommage des variables et des méthodes** : Le nommage doit suivre des conventions claires. Par exemple, les variables sont souvent en `snake_case` (avec des lettres minuscules et des underscores pour séparer les mots), tandis que les classes sont en `CamelCase`.
+- **Ordre des attributs dans les modèles** : Dans la définition d'un modèle, les attributs doivent être placés dans un ordre particulier pour favoriser la lisibilité. Par exemple, les champs liés aux relations doivent être déclarés avant les champs simples.
+- **Nommage XML** : Les identifiants XML doivent être uniques et respecter une certaine logique pour éviter les conflits entre différents modules.
+
+### 2. **Refactorisation du code**
+Refactoriser le code signifie améliorer sa structure sans en changer le comportement externe. Cela peut inclure :
+- **Renommer des variables ou des méthodes** pour mieux refléter leur fonction.
+- **Réorganiser les blocs de code** afin de rendre l'application plus lisible.
+- **Simplifier des logiques complexes** ou redondantes.
+- **Vérifier la conformité aux conventions de codage** mentionnées ci-dessus.
+
+L'idée est de rendre le code plus propre, plus facile à maintenir et à étendre tout en respectant les règles d'Odoo.
+
+### 3. **Exécution du linter**
+Un **linter** est un outil qui analyse le code pour détecter des erreurs de syntaxe, des incohérences dans le style, ou des violations des bonnes pratiques de codage. Dans le cas d'Odoo, l'exécution du linter permettra de vérifier si le code respecte les règles de codage du framework. Il est important de l'exécuter régulièrement afin de corriger les erreurs avant de pousser des modifications.
+
+### 4. **Utilisation de Runbot pour tester**
+**Runbot** est un serveur d'intégration continue (CI) développé par Odoo. Il permet de tester automatiquement le code sur plusieurs versions d'Odoo et dans différents scénarios. Dès qu'un développeur fait un commit, Runbot exécute un ensemble de tests pour vérifier que le code n'introduit pas de régressions (problèmes) dans le système.
+
+**Comment ça fonctionne** :
+- **Tests de régression** : Runbot vérifie si les nouvelles modifications du code n'ont pas cassé les fonctionnalités existantes. Il exécute une série de tests automatisés pour vérifier le bon fonctionnement de l'application.
+- **Données de démonstration** : Runbot déploie les versions de code testées sur un serveur et utilise des données de démonstration pour s'assurer que l'application fonctionne correctement dans un environnement simulé.
+- **Vérification des commits** : Chaque commit, branche ou pull request (PR) est testé sur Runbot pour s'assurer qu'il n'introduit pas de bugs ou de problèmes de compatibilité.
+
+### 5. **Pratiques recommandées avec Runbot**
+- **Tester fréquemment** : Avant d'intégrer des changements, il est recommandé de tester fréquemment sur Runbot pour détecter rapidement les erreurs.
+- **Vérifier la version stable** : Avant de pousser de nouveaux changements, il est utile de tester sur la version stable d'Odoo (disponible sur Runbot) pour s'assurer que tout fonctionne bien avec la dernière version d'Odoo.
+
+### Conclusion
+Le chapitre vous guide sur l'importance de **polir** votre code en suivant les directives de codage d'Odoo, ce qui garantit une meilleure qualité du code et une meilleure intégration avec l'écosystème Odoo. Ensuite, il met l'accent sur l'utilisation de **Runbot** pour tester le code et s'assurer qu'il n'introduit pas de régressions, permettant ainsi de valider les modifications avant qu'elles ne soient déployées en production.

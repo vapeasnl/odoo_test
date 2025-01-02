@@ -1,0 +1,44 @@
+### Chapitre 1 : Vue d'ensemble de l'architecture
+
+#### Points clés à retenir :
+
+1. **Architecture Multitier d'Odoo** :
+   - **Présentation (UI)** : Utilise **HTML5, CSS et JavaScript**. C’est la couche visible par l’utilisateur. La nouvelle version (15.0) intègre le **framework OWL**, remplaçant l'ancien framework JavaScript, bien que ce dernier soit encore pris en charge pour le moment.
+   - **Logique Métier** : Codée principalement en **Python**, cette couche contient la logique qui traite les actions et données des utilisateurs, comme la gestion des factures, des stocks, etc.
+   - **Stockage des données** : Utilise **PostgreSQL** comme système de gestion de base de données relationnelle (SGBDR), où toutes les données sont stockées et gérées.
+
+2. **Modules Odoo** :
+   - Les modules sont des extensions qui ajoutent de nouvelles fonctionnalités à Odoo ou modifient des fonctionnalités existantes. Ils peuvent être de plusieurs types : logique métier, présentation (UI), ou des personnalisations (ex. : rapports, flux de travail personnalisés).
+   - **Modules = Addons** : Les modules peuvent être appelés "addons" et sont stockés dans un répertoire spécifique, appelé **addons_path**.
+
+3. **Composition d'un Module** :
+   - Un module peut contenir **objets métier** (déclarés comme des classes Python), **vues d'objets** (définissant l'interface utilisateur), **fichiers de données** (XML ou CSV pour la configuration et les vues), **contrôleurs web** (gérant les requêtes web), et **données web statiques** (images, fichiers CSS/JS).
+   - Certains modules peuvent n'inclure que des fichiers de données ou des objets métier. L'exemple de module développé dans ce chapitre contiendra principalement des objets métier et des vues.
+
+4. **Structure d'un Module** :
+   - Un module Odoo est organisé sous forme de répertoire avec des fichiers comme **models/** (contenant les classes Python pour la logique métier), **data/** (contenant des fichiers XML pour la configuration et les vues), et **__manifest__.py** (fichier essentiel pour définir le module et ses métadonnées).
+   - Un module peut également inclure un fichier **__init__.py** pour organiser et importer les fichiers Python nécessaires dans le module.
+
+5. **Éditions Odoo** :
+   - **Odoo Enterprise** : Version payante avec plus de fonctionnalités, support, mises à jour, et modules supplémentaires par rapport à la version Community.
+   - **Odoo Community** : Version gratuite et open-source qui inclut les fonctionnalités de base, mais avec moins de services et de modules supplémentaires que la version Enterprise.
+
+---
+
+#### Ce que vous devez comprendre et retenir :
+
+1. **Architecture Multitier** : Odoo utilise une architecture à trois couches, chacune avec une responsabilité spécifique (UI, logique métier, et stockage des données). Cela permet une séparation claire des responsabilités et une meilleure évolutivité et maintenance du système.
+
+2. **Modules Odoo** : Les modules sont essentiels dans Odoo. Ils permettent de personnaliser et d’étendre le système en ajoutant de nouvelles fonctionnalités ou en modifiant les fonctionnalités existantes. Vous devez comprendre la structure des modules, leurs éléments essentiels et leur fonctionnement.
+
+3. **Structure d'un Module** : Chaque module dans Odoo doit comporter au moins deux fichiers : **__init__.py** (pour organiser les imports) et **__manifest__.py** (pour décrire le module). D’autres fichiers peuvent être ajoutés pour définir des objets métier, des vues ou des fichiers de configuration.
+
+4. **Différences entre les Éditions** : Savoir qu'Odoo est disponible en version **Community** (open-source) et **Enterprise** (payante avec plus de fonctionnalités et de services) vous permet de comprendre les options disponibles et choisir celle qui correspond à vos besoins.
+
+---
+
+#### Points importants à retenir pour commencer :
+
+- La **structure de module** est clé pour développer une application dans Odoo. Vous devez comprendre comment organiser votre code et vos fichiers de configuration.
+- Odoo est basé sur une architecture **multitier**, où chaque couche a une fonction spécifique, facilitant la maintenance et l'extension du système.
+- **Modules** : Il est essentiel de savoir créer et configurer des modules dans Odoo pour ajouter des fonctionnalités spécifiques à l’application.

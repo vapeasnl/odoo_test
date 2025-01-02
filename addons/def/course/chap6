@@ -1,0 +1,66 @@
+Ce chapitre aborde la personnalisation des vues dans Odoo, spécifiquement pour un module immobilier. Voici un résumé des éléments clés :
+
+### 1. **Vues de Liste** :
+   - **Objectif** : Afficher les enregistrements sous forme de tableau. Par défaut, Odoo affiche les champs de manière basique, mais il est important de personnaliser cette vue pour une meilleure organisation des informations.
+   - **Exemple XML pour la vue liste** :
+     ```xml
+     <list string="Propriétés">
+         <field name="name"/>
+         <field name="address"/>
+         <field name="price"/>
+         <field name="state"/>
+     </list>
+     ```
+     Ce code crée une vue de liste pour le modèle `estate.property` en affichant les champs nécessaires comme le nom, l'adresse, le prix et l'état de la propriété.
+
+### 2. **Vues de Formulaire** :
+   - **Objectif** : Utilisées pour créer et modifier des enregistrements individuels.
+   - **Structure** : Elles sont organisées en groupes et en onglets. Vous pouvez ajouter des champs et des éléments interactifs pour structurer l'interface de manière logique.
+   - **Exemple XML pour la vue formulaire** :
+     ```xml
+     <form string="Propriétés">
+         <sheet>
+             <group>
+                 <field name="name"/>
+                 <field name="address"/>
+             </group>
+             <group>
+                 <field name="price"/>
+                 <field name="state"/>
+             </group>
+         </sheet>
+     </form>
+     ```
+     Ce code crée une vue de formulaire où les informations comme le nom, l'adresse, le prix et l'état sont regroupées dans des sections distinctes.
+
+### 3. **Vues de Recherche** :
+   - **Objectif** : Permettre à l'utilisateur de filtrer les résultats dans les vues agrégées (comme les vues de liste).
+   - **Exemple de Vue de Recherche** :
+     ```xml
+     <search string="Rechercher des propriétés">
+         <field name="name"/>
+         <field name="price"/>
+         <filter name="available" string="Disponibles" domain="[('state', '=', 'Nouveau')]"/>
+         <filter name="group_by_postcode" string="Grouper par Code Postal" context="{'group_by': 'postcode'}"/>
+     </search>
+     ```
+     Ce code ajoute une fonctionnalité de recherche permettant de filtrer les propriétés disponibles et de regrouper les résultats par code postal.
+
+### 4. **Domaines de Recherche** :
+   - **Concept** : Les domaines sont utilisés pour filtrer les enregistrements dans Odoo. Un domaine est constitué de conditions qui appliquent des critères de sélection (par exemple, un filtre pour sélectionner les produits dont le prix est supérieur à 1 000).
+   - **Exemple de domaine** :
+     ```python
+     [('state', '=', 'Nouveau'), ('price', '>', 100000)]
+     ```
+     Ce domaine filtre les propriétés dont l'état est "Nouveau" et dont le prix est supérieur à 100 000.
+
+### Exercices à réaliser :
+1. **Vue de Liste** : Créez une vue de liste personnalisée pour le modèle `estate.property`, en affichant des champs comme le nom, l'adresse, le prix et l'état.
+2. **Vue de Formulaire** : Créez une vue de formulaire personnalisée pour le même modèle, en regroupant les champs de manière logique.
+3. **Vue de Recherche** : Ajoutez une vue de recherche personnalisée pour le modèle `estate.property` avec des filtres pour les propriétés disponibles et un groupe par code postal.
+
+### Conseils pratiques :
+- **Test en temps réel** : Utilisez le paramètre `--dev xml` pour éviter de redémarrer constamment le serveur et voir les modifications en temps réel.
+- **Gestion des identifiants** : Veillez à ce que les identifiants des vues soient uniques pour éviter les conflits.
+
+En suivant ces étapes et en personnalisant les vues XML, vous serez capable de rendre l'interface de votre module immobilier beaucoup plus fonctionnelle et adaptée aux besoins des utilisateurs.

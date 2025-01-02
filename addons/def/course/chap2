@@ -1,0 +1,64 @@
+### Chapitre 2 : Une nouvelle application
+
+#### Points clés à retenir :
+
+1. **Objectif du chapitre** : Créer un nouveau module Odoo de base, en l'occurrence un module pour gérer des **annonces immobilières**. Ce module sera initialement une "coquille vide", c'est-à-dire qu'il sera uniquement reconnu par Odoo, sans fonctionnalités ajoutées, mais avec les bases nécessaires pour démarrer.
+
+2. **Module Annonces Immobilières** :
+   - Ce module est spécifique au domaine de l'immobilier, un secteur qui n'est pas couvert par les modules standards d'Odoo.
+   - Avant de créer un module, il est recommandé de vérifier si Odoo propose déjà une solution pour le cas d'activité que vous souhaitez couvrir.
+
+3. **Structure minimale d'un module** :
+   - Pour que Odoo reconnaisse votre module, vous devez créer au moins deux fichiers :
+     - **`__init__.py`** : Ce fichier est nécessaire pour indiquer à Odoo que le répertoire est un module Python. Il peut être vide au début.
+     - **`__manifest__.py`** : Ce fichier est essentiel. Il doit décrire le module et inclure des informations comme le nom, la catégorie, les dépendances, etc. Ce fichier est utilisé pour configurer les métadonnées du module.
+   - Exemple de champs dans le fichier `__manifest__.py` :
+     - `name` : Le nom du module.
+     - `category` : La catégorie à laquelle appartient le module (ex. Immobilier, Comptabilité, etc.).
+     - `depends` : Les modules dont dépend votre module pour fonctionner (par exemple, **base** pour commencer).
+
+4. **Répertoire du module** :
+   - Créez un répertoire pour votre module, par exemple, **`estate`**.
+   - À l’intérieur de ce répertoire, vous devez inclure les fichiers suivants :
+     - **`__init__.py`** (vide pour l'instant).
+     - **`__manifest__.py`** qui contient les informations de base du module (par exemple, `name` et `depends`).
+
+5. **Mettre à jour la liste des applications** :
+   - Une fois le répertoire et les fichiers créés, redémarrez le serveur Odoo.
+   - Allez dans **Applications**, cliquez sur **Mettre à jour la liste des applications**.
+   - Cherchez votre module (ex. `estate`), et vous devriez le voir apparaître dans la liste.
+   - Si le module n’apparaît pas, vérifiez que vous avez bien activé le mode développeur et que vous avez supprimé le filtre par défaut "Applications".
+
+6. **Faire de votre module une "application"** :
+   - Ajoutez la clé `application: True` dans le fichier **`__manifest__.py`** pour que le module apparaisse sous l'onglet "Applications" dans Odoo.
+   - Vous pouvez même installer le module, bien qu’il n’ait pas encore de fonctionnalités, il apparaîtra comme une application vide.
+
+---
+
+#### Ce que vous devez comprendre et retenir :
+
+1. **Création de la structure de module** :
+   - Un module Odoo est constitué de plusieurs fichiers et dossiers, mais pour commencer, seuls deux fichiers sont nécessaires :
+     - **`__init__.py`** : pour marquer le répertoire comme un module Python.
+     - **`__manifest__.py`** : pour fournir les informations de base du module (nom, dépendances, etc.).
+   - La structure de répertoire d'un module peut être simple au départ, mais vous pouvez l'enrichir au fur et à mesure que vous ajoutez des fonctionnalités.
+
+2. **Gestion des dépendances** :
+   - Les modules Odoo peuvent dépendre d'autres modules. Par exemple, un module d'annonces immobilières pourrait dépendre du module **base**, qui contient des fonctionnalités de base nécessaires au bon fonctionnement de tous les modules.
+
+3. **Mettre à jour et installer le module** :
+   - Une fois votre module créé, vous devez mettre à jour la liste des applications dans Odoo et activer le mode développeur pour voir les modifications.
+   - Vous pouvez même installer votre module, bien que ce soit encore une coquille vide à ce stade.
+
+4. **Premiers pas avec Odoo** :
+   - La première étape consiste à faire en sorte que Odoo reconnaisse votre module. Ensuite, vous pouvez lui ajouter progressivement des fonctionnalités.
+   - La création de modules dans Odoo suit un processus d'évolution : commencer avec une structure de base, puis ajouter des fonctionnalités au fur et à mesure.
+
+---
+
+#### Points importants à retenir pour continuer :
+
+- **Créer un module vide** avec les fichiers **`__init__.py`** et **`__manifest__.py`**.
+- **Définir les dépendances** pour que votre module fonctionne correctement avec Odoo.
+- **Mettre à jour la liste des applications** et **activer le mode développeur** pour pouvoir voir et installer votre module.
+- À partir de cette base, vous pourrez ajouter des fonctionnalités à votre module pour répondre aux besoins spécifiques de votre domaine d'activité (comme l'immobilier dans ce cas).

@@ -1,0 +1,189 @@
+Ce modèle `EstateProperty` dans Odoo représente une propriété immobilière et contient plusieurs fonctionnalités pour la gestion des informations relatives aux propriétés, comme leur prix, leur état, et leurs offres. Voici une explication détaillée de chaque partie du code :
+
+### 1. Définition du modèle :
+```python
+class EstateProperty(models.Model):
+    _name = "estate.property"
+    _description = "A Realestate Property"
+    _order = "id desc"
+```
+- **_name** : Définition du nom du modèle, ici `estate.property`, utilisé pour référencer ce modèle dans la base de données.
+- **_description** : Donne une description du modèle, ici il s'agit d'une propriété immobilière.
+- **_order** : Définit l'ordre des enregistrements retournés par défaut. Ici, les propriétés sont triées par ID de manière décroissante (du plus récent au plus ancien).
+
+### 2. Champs (fields) du modèle :
+Les champs sont utilisés pour stocker les informations de chaque propriété.
+
+#### a. `name` (Char)
+```python
+name = fields.Char('Property Name', required=True)
+```
+- Ce champ enregistre le nom de la propriété. Il est obligatoire.
+
+#### b. `description` (Text)
+```python
+description = fields.Text('Description', required=True)
+```
+- Ce champ permet de décrire la propriété. Il est également obligatoire.
+
+#### c. `postcode` (Char)
+```python
+postcode = fields.Char('Postcode', required=False)
+```
+- Ce champ enregistre le code postal de la propriété. Il n'est pas obligatoire.
+
+#### d. `date_availability` (Date)
+```python
+date_availability = fields.Date('Availability Date', required=True, default=lambda self: fields.Datetime.add(fields.Datetime.today(), months=3), copy=False)
+```
+- Ce champ spécifie la date à laquelle la propriété sera disponible. La valeur par défaut est définie sur 3 mois à partir de la date actuelle.
+
+#### e. `expected_price` (Float)
+```python
+expected_price = fields.Float('Expected Price', required=False)
+```
+- Ce champ enregistre le prix attendu de la propriété. Il n'est pas obligatoire.
+
+#### f. `selling_price` (Float)
+```python
+selling_price = fields.Float('Selling Price', required=False, copy=False, readonly=True)
+```
+- Ce champ enregistre le prix de vente. Il est en lecture seule après sa définition et ne peut pas être copié lors de la duplication d'un enregistrement.
+
+#### g. `bedrooms` (Integer)
+```python
+bedrooms = fields.Integer('Bedrooms', required=True, default=2)
+```
+- Ce champ enregistre le nombre de chambres dans la propriété. Par défaut, il est défini sur 2 chambres.
+
+#### h. `living_area` (Integer)
+```python
+living_area = fields.Integer('Living Area', required=True, default=0)
+```
+- Ce champ enregistre la superficie habitable de la propriété. La valeur par défaut est 0.
+
+#### i. `facades` (Integer)
+```python
+facades = fields.Integer('Facades', required=True, default=0)
+```
+- Ce champ enregistre le nombre de façades de la propriété. La valeur par défaut est 0.
+
+#### j. `garage` (Boolean)
+```python
+garage = fields.Boolean('Garage', required=True, default=False)
+```
+- Ce champ enregistre si la propriété possède un garage. Par défaut, il est défini sur `False`.
+
+#### k. `garden` (Boolean)
+```python
+garden = fields.Boolean('Garden', required=True, default=False)
+```
+- Ce champ enregistre si la propriété possède un jardin. Par défaut, il est défini sur `False`.
+
+#### l. `garden_area` (Integer)
+```python
+garden_area = fields.Integer('Garden Area', required=True, default=0)
+```
+- Ce champ enregistre la superficie du jardin. La valeur par défaut est 0.
+
+#### m. `garden_orientation` (Selection)
+```python
+garden_orientation = fields.Selection(
+    string='Garden Orientation',
+    selection=[('north', 'North'), ('east', 'East'), ('south', 'South'), ('west', 'West')],
+    help="Select garden orientation"
+)
+```
+- Ce champ permet de sélectionner l'orientation du jardin. Il propose quatre options : nord, est, sud, ou ouest.
+
+#### n. `active` (Boolean)
+```python
+active = fields.Boolean('Active', default=True)
+```
+- Ce champ détermine si la propriété est active ou non. Par défaut, il est défini sur `True`.
+
+#### o. `state` (Selection)
+```python
+state = fields.Selection(
+        string='State',
+        selection=[('new', 'New'), ('offer_received', 'Offer Received'), ('offer_accepted', 'Offer Accepted'), ('sold', 'Sold'), ('canceled', 'Canceled')],
+        default='new'
+    )
+```
+- Ce champ enregistre l'état de la propriété. Il peut être l'un des cinq états : "New", "Offer Received", "Offer Accepted", "Sold", ou "Canceled". Par défaut, il est défini sur "New".
+
+#### p. Relations avec d'autres modèles :
+- **`property_type_id` (Many2one)** : Relie la propriété à un type spécifique de propriété via le modèle `estate.property.type`.
+- **`buyer_id` (Many2one)** : Relie la propriété à un acheteur (modèle `res.partner`).
+- **`salesperson_id` (Many2one)** : Relie la propriété à un vendeur (modèle `res.users`).
+- **`tag_ids` (Many2many)** : Permet d'associer des tags à la propriété via le modèle `estate.property.tag`.
+- **`offer_ids` (One2many)** : Relie la propriété aux offres qu'elle a reçues via le modèle `estate.property.offer`.
+
+#### q. Calculs :
+- **`total_area` (Float, computed)** : Calcule la superficie totale de la propriété (superficie habitable + superficie du jardin si applicable).
+- **`best_offer` (Float, computed)** : Calcule la meilleure offre reçue pour cette propriété.
+
+### 3. Contraintes SQL :
+```python
+_sql_constraints = [
+    ('check_expected_price', 'CHECK(expected_price >= 0)', 'The expected price must be a positive number.'),
+    ('check_selling_price', 'CHECK(selling_price >= 0 OR selling_price IS NULL)', 'The selling price must be a positive number or NULL.')
+]
+```
+- Ces contraintes SQL garantissent que le prix attendu est positif et que le prix de vente est soit positif, soit nul.
+
+### 4. Méthodes spéciales :
+#### a. `_unlink_record` (ondelete)
+```python
+@api.ondelete(at_uninstall=False)
+def _unlink_record(self):
+    if self.state not in('new', 'canceled'):
+        raise UserError(_('Only a canceled or new property can be deleted.'))
+```
+- Cette méthode est appelée lors de la suppression d'une propriété. Elle empêche la suppression d'une propriété si son état n'est pas "new" (nouvelle) ou "canceled" (annulée).
+
+#### b. `_compute_total_area` (Méthode de calcul)
+```python
+@api.depends("living_area", "garden_area", "garden")
+def _compute_total_area(self):
+    for record in self:
+        total_area = record.living_area
+        if record.garden:
+            total_area += record.garden_area
+        record.total_area = total_area
+```
+- Cette méthode calcule la superficie totale en fonction de la superficie habitable et du jardin, si le jardin est présent.
+
+#### c. `_compute_best_offer` (Méthode de calcul)
+```python
+@api.depends("offer_ids")
+def _compute_best_offer(self):
+    for record in self:
+        record.best_offer = max(record.offer_ids.mapped("price"), default=0)
+```
+- Cette méthode calcule la meilleure offre reçue pour la propriété. Elle parcourt les offres et prend la valeur maximale.
+
+### 5. Actions de gestion de la propriété :
+#### a. `action_cancel_property` :
+```python
+def action_cancel_property(self):
+    if any(record.state != 'new' and record.state != 'canceled' for record in self):
+        raise UserError(_('Only a canceled or new property can be deleted.'))
+    return self.write({'state': 'canceled'})
+```
+- Cette méthode permet d'annuler une propriété. Elle vérifie que la propriété est dans un état valide avant de changer son état en "canceled".
+
+#### b. `action_sold_property` :
+```python
+def action_sold_property(self):
+    if any(record.state == 'canceled' for record in self):
+        raise UserError(_('A Canceled property cannot be sold.'))
+    return self.write({'state': 'sold'})
+```
+- Cette méthode permet de marquer une propriété comme vendue. Elle empêche la vente d'une propriété annulée.
+
+---
+
+En résumé, ce modèle `EstateProperty` gère toutes les informations relatives à une propriété immobilière, y compris son état, son prix, ses caractéristiques et ses offres. Il inclut également des fonctionnalités pour marquer une propriété comme vendue ou annulée, calculer la superficie totale, et gérer les meilleures offres reçues.
+
+Si vous avez des questions supplémentaires ou souhaitez des précisions, n'hésitez pas à demander !

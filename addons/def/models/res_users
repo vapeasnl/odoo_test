@@ -1,0 +1,30 @@
+Le modèle `Users` hérite du modèle `res.users`, qui représente les utilisateurs dans Odoo. Voici une explication détaillée du code :
+
+### 1. Héritage du modèle `res.users` :
+```python
+class Users(models.Model):    
+    _inherit = 'res.users'
+```
+- **_inherit = 'res.users'** : Ce code indique que le modèle `Users` hérite du modèle `res.users`. Cela signifie que vous étendez les fonctionnalités du modèle utilisateur d'Odoo, en y ajoutant des champs ou des comportements supplémentaires sans avoir à réécrire tout le modèle de base.
+
+### 2. Ajout d'un champ One2many :
+```python
+property_ids = fields.One2many('estate.property', inverse_name='salesperson_id', domain=lambda self: [('state', 'in', ('new', 'offer_received'))])
+```
+- **`property_ids`** : Ce champ est un champ **One2many** qui crée une relation entre le modèle `Users` et le modèle `estate.property`. Il permet de lier plusieurs propriétés à un utilisateur spécifique.
+  
+- **`'estate.property'`** : C'est le modèle cible de la relation One2many, c'est-à-dire le modèle auquel ce champ fait référence. Dans ce cas, il fait référence aux propriétés immobilières (`estate.property`).
+
+- **`inverse_name='salesperson_id'`** : Ce paramètre définit le champ de la relation **Many2one** dans le modèle `estate.property` qui correspond à cette relation One2many. Ici, cela signifie que chaque propriété a un champ `salesperson_id`, qui est une relation Many2one pointant vers l'utilisateur (ou le vendeur) qui a créé la propriété.
+
+- **`domain=lambda self: [('state', 'in', ('new', 'offer_received'))]`** : Le **domain** filtre les propriétés qui seront liées à un utilisateur. Ici, il indique que seules les propriétés dont l'état (`state`) est soit `'new'` (nouvelle propriété) soit `'offer_received'` (offre reçue) seront associées à cet utilisateur. Cela permet de restreindre les propriétés affichées dans cette relation aux propriétés actives et en attente d'une offre.
+
+### 3. Résumé :
+Ce modèle `Users` étend le modèle d'utilisateur standard d'Odoo en ajoutant un champ `property_ids`. Ce champ permet à chaque utilisateur (probablement un agent immobilier ou un vendeur) de gérer les propriétés immobilières qui lui sont assignées. Seules les propriétés qui ont un état `'new'` ou `'offer_received'` sont associées à l'utilisateur, ce qui permet de suivre les propriétés en vente ou en attente d'une offre.
+
+### Exemple d'utilisation :
+1. **Vendeur d'une propriété** : Lorsqu'un utilisateur (vendeur) crée ou gère une propriété, il est automatiquement assigné à cette propriété via le champ `salesperson_id` dans le modèle `estate.property`.
+2. **Liste des propriétés d'un utilisateur** : Depuis un enregistrement d'utilisateur, vous pouvez facilement consulter toutes les propriétés qui lui sont attribuées avec l'état `'new'` ou `'offer_received'`.
+
+### Conclusion :
+Ce champ permet aux utilisateurs (agents immobiliers) d’avoir un aperçu de toutes les propriétés qu'ils gèrent, en se concentrant sur celles qui sont en cours de vente ou en attente d'une offre. Ce type d’extension est très utile pour organiser et suivre les propriétés dans une plateforme immobilière.

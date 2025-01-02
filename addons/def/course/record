@@ -1,0 +1,98 @@
+Dans le contexte d’Odoo, **`record`** fait généralement référence à l'instance de l'objet ou du modèle (enregistrement) pour lequel vous travaillez, que ce soit dans le code Python ou dans une vue XML. Lorsqu'on travaille avec des vues XML ou des actions (comme des boutons), on fait souvent référence à un **enregistrement spécifique** sous forme de **`record`**. Voici un aperçu de son utilisation dans divers contextes.
+
+### 1. **Dans les vues XML avec les attributs `t-` (comme `t-if`, `t-attf-class`, etc.)**
+   - **`record`** fait référence à l'enregistrement du modèle actuel (l'objet) pour lequel la vue est rendue. Par exemple, dans un template QWeb, `record` représente l'enregistrement actuel du modèle (une instance du modèle dans la base de données).
+
+   Exemple avec `t-if` et `t-attf-class` :
+   ```xml
+   <div t-if="record.state == 'draft'">
+       This is a draft record.
+   </div>
+
+   <div t-attf-class="#{record.state == 'draft' and 'highlight' or ''}">
+       Record is in draft state.
+   </div>
+   ```
+
+   **Explication** :
+   - `record.state` fait référence à l'attribut `state` de l'enregistrement actuel.
+   - Dans le premier exemple, le `div` ne sera affiché que si l'enregistrement a l'état `draft`.
+   - Dans le second exemple, la classe `highlight` est ajoutée si l'état de l'enregistrement est `draft`.
+
+### 2. **Dans les méthodes Python avec l'API d'Odoo (`@api.model`, `@api.depends`, etc.)**
+   - **`record`** est une instance d'un modèle que vous manipulez dans une boucle ou à l'intérieur d'une méthode.
+   
+   Exemple avec `@api.depends` et `@api.constrains` :
+   ```python
+   class Property(models.Model):
+       _name = 'estate.property'
+       
+       price = fields.Float('Price')
+       state = fields.Selection([('new', 'New'), ('sold', 'Sold')], default='new')
+
+       @api.constrains('price')
+       def _check_price(self):
+           for record in self:
+               if record.price <= 0:
+                   raise ValidationError("Price must be greater than 0.")
+               
+       @api.depends('price')
+       def _compute_discount(self):
+           for record in self:
+               record.discount = record.price * 0.1 if record.state == 'sold' else 0
+   ```
+
+   **Explication** :
+   - `for record in self`: ici, `self` représente un ensemble d'enregistrements, et `record` fait référence à chaque instance (un enregistrement individuel).
+   - Dans la méthode `_check_price`, chaque `record` est vérifié pour s'assurer que le prix est supérieur à zéro.
+   - Dans la méthode `_compute_discount`, un calcul est effectué pour définir un champ `discount` en fonction de l'état du bien immobilier (`state`).
+
+### 3. **Dans l'interface utilisateur XML (views)** :
+   - Les champs sont souvent référencés par `record` pour les afficher dynamiquement dans une vue, par exemple :
+   ```xml
+   <field name="price"/>
+   ```
+
+   Cela peut également être combiné avec des conditions dynamiques en fonction de l'enregistrement actuel. Par exemple :
+   ```xml
+   <div t-if="record.state == 'sold'">
+       The property is sold for: <span t-esc="record.price"/>
+   </div>
+   ```
+
+### 4. **Dans un formulaire (views)** :
+   Si vous souhaitez modifier l'apparence d'un champ en fonction de l'état de l'enregistrement, vous pourriez utiliser `record` dans des expressions conditionnelles.
+   Exemple avec `t-attf-class` :
+   ```xml
+   <field name="price" t-attf-class="{'highlight': record.state == 'sold'}"/>
+   ```
+
+   **Explication** :
+   - Si l'état du `record` est `'sold'`, la classe `highlight` sera appliquée au champ `price`, ce qui pourrait être utile pour modifier visuellement les champs en fonction de certaines conditions.
+
+### 5. **Lors des actions (comme `@api.onchange` ou dans des actions liées à un bouton)**
+   Vous pouvez également manipuler des champs ou effectuer des actions spécifiques sur un **enregistrement** (`record`) lors d'événements, comme un changement ou une action de bouton.
+
+   Exemple d'action avec bouton (dans un formulaire) :
+   ```xml
+   <button name="action_sell" string="Sell" type="object" class="oe_highlight"/>
+   ```
+
+   Et dans le modèle Python :
+   ```python
+   class EstateProperty(models.Model):
+       _name = 'estate.property'
+
+       state = fields.Selection([('new', 'New'), ('sold', 'Sold')], default='new')
+
+       def action_sell(self):
+           for record in self:
+               record.state = 'sold'
+   ```
+
+   **Explication** :
+   - Lorsque l'utilisateur clique sur le bouton "Sell", la méthode `action_sell` est appelée.
+   - Chaque `record` (dans ce cas, chaque bien immobilier) a son `state` mis à jour.
+
+### Conclusion
+Dans Odoo, **`record`** est une référence à l'instance de l'enregistrement dans les vues, modèles ou méthodes. Cela vous permet de manipuler les données de chaque enregistrement individuellement, en fonction de son état ou d'autres attributs. Cette référence est utilisée dans différents contextes, comme dans les vues XML (pour rendre dynamique l'affichage des champs) et dans les méthodes Python (pour valider ou mettre à jour les données des enregistrements).

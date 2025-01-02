@@ -1,0 +1,30 @@
+<odoo>
+<data>
+    <!-- Définition d'un enregistrement de vue (res.users.view.form.inherit.estate) -->
+    <record id="res_users_view_form" model="ir.ui.view">
+        <!-- Nom de la vue -->
+        <field name="name">res.users.view.form.inherit.estate</field>
+        
+        <!-- Le modèle auquel la vue est liée (ici, le modèle des utilisateurs) -->
+        <field name="model">res.users</field>
+        
+        <!-- Spécifie l'ID de la vue à laquelle cette vue hérite -->
+        <field name="inherit_id" ref="base.view_users_form"/>
+        
+        <!-- Architecture de la vue (partie XML qui définit la structure de la vue) -->
+        <field name="arch" type="xml">
+            <!-- Recherche un élément <page> avec l'attribut name="preferences" et insère après cet élément -->
+            <xpath expr="//page[@name='preferences']" position="after">
+                
+                <!-- Ajoute une nouvelle page "Properties" après la page "preferences" -->
+                <page string="Properties">
+                    <group>
+                        <!-- Champ "property_ids" de l'utilisateur sans label -->
+                        <field name="property_ids" nolabel="1"/>
+                    </group>
+                 </page>            
+            </xpath>
+        </field>
+    </record>
+</data>
+</odoo>

@@ -1,25 +1,16 @@
 <odoo>
 
-    <!-- Vue de recherche pour les propriétés immobilières -->
     <record id="view_estate_property_search" model="ir.ui.view">
         <field name="name">estate.property.search</field>
         <field name="model">estate.property</field>
         <field name="arch" type="xml">
-            <search string="Estates">
+            <search string="Esates">
                 <field name="name"/>
-                
-                <!-- Filtre pour la recherche par nom ou description -->
                 <field name="description" string="Name and description" 
                     filter_domain="['|', ('name', 'ilike', self), ('description', 'ilike', self)]"/>
-
-                <!-- Filtre pour la surface habitable supérieure à une certaine valeur -->
                 <field name="living_area" filter_domain="[('living_area', '>', self)]" />
-
-                <!-- Filtre pour afficher les propriétés disponibles -->
                 <filter string="Available" name="available_properties" domain="[('state', 'in', ('offer_received', 'new'))]"/>
                 <separator/>
-                
-                <!-- Filtre par orientation du jardin avec un groupement -->
                 <field name="garden_orientation"/>
                 <group expand="0" string="Group By">
                     <filter string="Garden Orientation" name="garden_orientation_type" domain="" context="{'group_by':'garden_orientation'}"/>
@@ -28,7 +19,6 @@
         </field>
     </record>
 
-    <!-- Action pour afficher les propriétés -->
     <record id="estate_property_action" model="ir.actions.act_window">
         <field name="name">Properties</field>
         <field name="search_view_id" ref="view_estate_property_search"/>
@@ -37,31 +27,32 @@
         <field name="view_mode">list,form,kanban</field>
     </record>
 
-    <!-- Vue en liste des propriétés -->
+
+
+
     <record id="estate_property_view_list" model="ir.ui.view">
         <field name="name">estate.property.list</field>
         <field name="model">estate.property</field>
         <field name="arch" type="xml">
-            <list string="Properties" 
+            <list string="Channel" 
                     decoration-success="state in ('offer_received', 'offer_accepted')" 
                     decoration-bf="state == 'offer_accepted'"
-                    decoration-muted="state == 'sold'">
-                
-                <!-- Champs affichés dans la vue liste -->
+                    decoration-muted="state == 'sold'" >
+
                 <field name="name" />
                 <field name="postcode" />
                 <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" />
                 <field name="bedrooms" />
-                <field name="living_area" />
+                <field name="living_area"  />
                 <field name="expected_price" />
                 <field name="selling_price" />
                 <field name="date_availability" />
                 <field name="state" invisible="1" />
+
             </list>
         </field>
     </record>
 
-    <!-- Vue Kanban des propriétés -->
     <record id="estate_property_view_kanban" model="ir.ui.view">
         <field name="name">estate.property.kanban</field>
         <field name="model">estate.property</field>
@@ -93,29 +84,33 @@
         </field>
     </record>
 
-    <!-- Vue Formulaire des propriétés -->
+
     <record id="estate_property_view_form" model="ir.ui.view">
         <field name="name">estate_property_view_form</field>
         <field name="model">estate.property</field>
         <field name="arch" type="xml">
             <form string="Estate Property">
                 <header>
-                    <!-- Boutons de statut pour annuler ou marquer comme vendu -->
                     <button name="action_cancel_property" string="Cancel" type="object" statusbar_visible="offer_received,offer_accepted" />
                     <button name="action_sold_property" string="Sold" type="object" statusbar_visible="offer_accepted" />
                     <field name="state" widget="statusbar" statusbar_visible="new,canceled,sold,offer_received,offer_accepted"/>
                 </header>
 
                 <sheet>
-                    <!-- Section Titre et Tags -->
+                    <field name="active" invisible="1"/>
                     <div class="oe_title">
-                        <label for="name" string="Name of Property" class="oe_edit_only"/>
-                        <h1><field name="name" class="o_text_overflow"/></h1>
-                        <label for="tag_ids" string="Tags" class="oe_edit_only"/>
+                        <div class="oe_edit_only">
+                            <label for="name" string="Name of Propery"/>
+                        </div>
+                        <h1>
+                            <field name="name" class="o_text_overflow"/>
+                        </h1>
+                        <div class="oe_edit_only">
+                            <label for="tag_ids" string="Tags"/>
+                        </div>
                         <field name="tag_ids" widget="many2many_tags" class="mb32" options="{'color_field': 'color'}"/>
+                        <field name="active" invisible="1"/>
                     </div>
-
-                    <!-- Section Détails de la propriété -->
                     <group>
                         <group>
                             <field name="property_type_id" options="{'no_create': True, 'no_open': True}"/>                    
@@ -127,51 +122,54 @@
                             <field name="best_offer" class="font-weight-bold text-primary" />
                             <field name="selling_price" />
                         </group>
+
+                    </group>
+                    <group>
+                        <notebook>
+                            <page string="Description">
+                                <div class='oe_edit_only'>
+                                    <label for="description">Description</label>
+                                </div>
+                                <div class="lead">
+                                    <field name="description" nolabel="1"/>
+                                </div>
+                                <group col="3">
+                                    <group class="mt20" string="Basic Features">
+                                        <field name="bedrooms" />
+                                        <field name="living_area" />
+                                        <field name="facades" />
+                                        <field name="garage" />
+                                    </group>
+                    <group class="mt20" string="Garden">
+                         <field name="garden"/>
+                         <field name="garden_area" invisible="1" modifiers="{'invisible': [('garden', '=', False)]}" />
+                         <field name="garden_orientation" invisible="1" modifiers="{'invisible': [('garden', '=', False)]}" />
                     </group>
 
-                    <!-- Onglets de détails supplémentaires -->
-                    <notebook>
-                        <!-- Page Description -->
-                        <page string="Description">
-                            <label for="description" class="oe_edit_only"/>
-                            <field name="description" nolabel="1" class="lead"/>
-                            <group col="3">
-                                <group string="Basic Features">
-                                    <field name="bedrooms" />
-                                    <field name="living_area" />
-                                    <field name="facades" />
-                                    <field name="garage" />
-                                </group>
-                                <group string="Garden">
-                                    <field name="garden"/>
-                                    <field name="garden_area" invisible="1" modifiers="{'invisible': [('garden', '=', False)]}" />
-                                    <field name="garden_orientation" invisible="1" modifiers="{'invisible': [('garden', '=', False)]}" />
-                                </group>
-                                <group string="Total">
-                                    <field name="total_area" />
-                                </group>
-                            </group>
-                        </page>
 
-                        <!-- Page other info -->
-                        <page string="Other Info">
-                            <group>
-                                <field name="salesperson_id" />
-                                <field name="buyer_id" />
-                            </group>
-                        </page>
-
-                        <!-- Page Offers -->
-                        <page string="Offers">
-                            <group>
-                                <field name="offer_ids" nolabel="1" 
-                                       t-attf-class="#{record.state not in ('new', 'offer_received') and 'o_readonly' or ''}" />
-                            </group>
-                        </page>
-                    </notebook>
+                                    <group class="mt20" string="Total">
+                                        <field name="total_area" />
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Other Info">
+                                <group class="mt20">
+                                    <field name="salesperson_id" />
+                                    <field name="buyer_id" />
+                                </group>
+                            </page>                            
+                            <page string="Offers">
+<group>
+    <field name="offer_ids" nolabel="1" 
+           t-attf-class="#{record.state not in ('new', 'offer_received') and 'o_readonly' or ''}" />
+</group>
+                            </page>
+                        </notebook>
+                    </group>
                 </sheet>
             </form>
         </field>
     </record>
+
 
 </odoo>
