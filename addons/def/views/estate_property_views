@@ -1,4 +1,5 @@
-Le code XML que vous avez partagé est destiné à gérer les propriétés dans un module immobilier Odoo, avec plusieurs vues (recherche, tableau, kanban et formulaire) et actions associées. Voici une explication détaillée des éléments présents dans le code :
+Le code XML que vous avez partagé est destiné à gérer les propriétés dans un module immobilier Odoo, avec plusieurs vues (recherche, tableau, kanban 
+et formulaire) et actions associées. Voici une explication détaillée des éléments présents dans le code :
 
 ### 1. **Action d'ouverture pour les propriétés (`estate_property_action`)**
 ```xml
